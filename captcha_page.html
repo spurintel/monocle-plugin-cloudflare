@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checking Connection...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            font-family: "Inter";
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+            color: black;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        a {
+            color: black;
+            transition: color 0.3s;
+            text-decoration: none;
+        }
+
+        .logo-cluster {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .center-div {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .monocle-logo {
+            font-size: 1.2rem;
+            height: 32;
+            width: 32;
+        }
+
+        @media (prefers-color-scheme: dark) {
+
+            body,
+            html {
+                background-color: black;
+                color: white;
+            }
+
+            a {
+                color: white;
+            }
+
+            .terms {
+                color: white;
+            }
+        }
+
+        @keyframes dots {
+
+            0%,
+            25% {
+                content: "";
+            }
+
+            50% {
+                content: ".";
+            }
+
+            75% {
+                content: "..";
+            }
+
+            100% {
+                content: "...";
+            }
+        }
+
+        .loading {
+            text-align: left;
+            width: 200px;
+        }
+
+        .loading-no-animation {
+            text-align: left;
+            width: 200px;
+        }
+
+        .terms {
+            margin: 2rem;
+            font-size: 0.8rem;
+            color: #888;
+
+            a {
+                color: #888;
+                text-decoration: underline;
+            }
+        }
+
+        .loading::after {
+            content: "";
+            animation: dots 4s infinite;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="center-div">
+        <a href="https://spur.us/monocle" target="_blank" referrerpolicy="none">
+            <div class="logo-cluster">
+                <svg width="110" height="24" viewBox="0 0 110 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M8.39014 5.51318C5.59368 7.07039 4.19743 10.1637 4.66391 13.1493L15.8616 13.1706L16.2614 15.4139L0.465314 15.3811C0.20138 14.4769 0.0466977 13.5583 0 12.6416L2.2581 11.787L2.60429 9.42077L0.692327 7.95288C1.0046 7.08375 1.41671 6.24803 1.92722 5.46549L4.25196 6.0983L5.92404 4.39085L5.24289 2.07831C5.63662 1.81073 6.05125 1.55921 6.48878 1.33284C6.88958 1.12876 7.29404 0.949604 7.70344 0.791411L9.21072 2.67344L11.5675 2.27472L12.3756 0C13.3093 0.0315491 14.2364 0.166556 15.1311 0.408013L15.2418 2.81767L17.3808 3.88324L19.374 2.51755C20.0982 3.08205 20.7677 3.72998 21.3574 4.46269L20.1175 6.33878L16.8078 6.3321C14.5154 4.39172 11.171 3.96465 8.39014 5.51318Z"
+                        fill="currentColor" />
+                    <path
+                        d="M18.7217 21.9502C18.3331 22.2101 17.9285 22.4536 17.5054 22.6704C17.0955 22.8836 16.6752 23.0672 16.252 23.226L14.7511 21.3413L12.393 21.7325L11.5761 24C10.6435 23.9695 9.72221 23.8283 8.82927 23.5862L8.72666 21.177L6.59065 20.1052L4.59325 21.4619C3.89235 20.9145 3.24367 20.2839 2.66958 19.574L3.97021 17.5919L7.11808 17.5984C9.41216 19.5968 12.8026 20.0514 15.6157 18.4848C18.3917 16.939 19.7881 13.8794 19.3518 10.9142L7.58539 10.8944L7.99713 8.6511L23.5451 8.66197C23.8051 9.56767 23.9551 10.4873 24 11.4044L21.7397 12.2523L21.3832 14.6168L23.291 16.0898C22.9746 16.9614 22.5606 17.7966 22.0491 18.5754L19.7255 17.9308L18.0435 19.6343L18.7221 21.95"
+                        fill="currentColor" />
+                    <path
+                        d="M35.8769 5.85833C34.7167 6.41137 34.431 7.84753 35.4408 8.70576C36.2655 9.40815 37.4635 9.68304 38.7893 10.0272C40.5317 10.4796 42.575 10.8865 44.3413 11.4699C45.6552 11.9038 47.1811 12.8746 47.7937 14.1582C48.4831 15.603 48.3965 17.5284 47.4474 18.8628C46.4636 20.2481 44.3445 20.8888 42.6335 21.102C40.8239 21.3278 38.9386 21.33 36.9776 21.1085C33.5934 20.7275 30.4883 19.1539 30.5457 15.261C30.5463 15.2263 30.5604 15.1931 30.5851 15.1687C30.6097 15.1442 30.643 15.1303 30.6777 15.1301L33.7221 15.1268C33.8448 15.1268 33.9177 15.1871 33.9408 15.3076C34.0035 15.6387 34.0154 16.0218 34.1442 16.326C34.8823 18.0673 37.2135 18.4494 38.8791 18.4504C39.2579 18.4515 39.707 18.5781 40.1345 18.5132C41.6389 18.2849 44.5837 18.6204 44.7785 16.4288C44.9149 14.8898 43.3359 14.1474 42.1865 13.7946C40.8416 13.3819 39.4866 13.0009 38.1215 12.6517C35.5966 12.0056 31.6658 11.0348 31.4483 7.88108C31.0782 2.52389 38.7547 2.46112 42.1638 2.88644C45.1984 3.26524 48.0524 4.69707 47.9993 8.22091C47.9986 8.29811 47.9596 8.33671 47.8824 8.33671H44.7406C44.6865 8.33683 44.6342 8.31631 44.5946 8.27932C44.555 8.24233 44.531 8.19165 44.5274 8.13758C44.4127 6.41678 43.0978 5.70898 41.5761 5.4395C39.8672 5.13538 37.5101 5.08019 35.8769 5.85833Z"
+                        fill="currentColor" />
+                    <path
+                        d="M53.8873 14.1841V20.9006C53.8873 20.9196 53.8799 20.9377 53.8667 20.9511C53.8535 20.9645 53.8356 20.972 53.8169 20.972H50.9284C50.8736 20.972 50.821 20.9503 50.7822 20.9115C50.7435 20.8727 50.7217 20.8202 50.7217 20.7653L50.7228 3.21755C50.7228 3.09561 50.7834 3.03465 50.9046 3.03465C54.8022 3.0332 58.6731 3.03284 62.5172 3.03356C65.2965 3.03356 68.4567 3.99461 69.1374 7.09637C69.4195 8.37993 69.3643 9.57583 68.9718 10.6841C68.0552 13.2772 65.2586 14.1224 62.7856 14.1246C59.8433 14.1275 56.8967 14.1278 53.9457 14.1257C53.9068 14.1257 53.8873 14.1451 53.8873 14.1841ZM53.896 5.86259L53.8765 11.2631C53.8765 11.2726 53.8802 11.2816 53.8869 11.2883C53.8936 11.295 53.9027 11.2988 53.9122 11.2988L63.0216 11.3313C63.8476 11.3341 64.6407 11.0661 65.2265 10.5863C65.8122 10.1065 66.1426 9.45418 66.145 8.7728L66.1471 8.43946C66.1483 8.10204 66.0689 7.76764 65.9134 7.45536C65.758 7.14308 65.5295 6.85904 65.2411 6.61945C64.9526 6.37986 64.6099 6.18942 64.2324 6.059C63.8549 5.92858 63.4501 5.86074 63.0411 5.85935L53.9317 5.82688C53.9222 5.82688 53.9131 5.83064 53.9064 5.83734C53.8997 5.84404 53.896 5.85312 53.896 5.86259Z"
+                        fill="currentColor" />
+                    <path
+                        d="M80.4573 21.2549C75.4291 21.4464 70.9085 19.454 70.8998 13.7602C70.8941 10.2075 70.8941 6.65479 70.8998 3.10209C70.8998 3.06168 70.92 3.04148 70.9604 3.04148L74.0806 3.03174C74.1629 3.03174 74.204 3.07286 74.204 3.15512C74.1881 6.412 74.1906 9.68368 74.2116 12.9701C74.2166 13.7046 74.2696 14.2739 74.3706 14.6779C75.1888 17.9442 78.6174 18.8338 81.585 18.2397C83.4476 17.8663 84.9173 16.7094 85.4108 14.8414C85.5082 14.4727 85.5573 13.9503 85.558 13.2743C85.563 9.96542 85.5641 6.61114 85.5612 3.21139C85.5612 3.16518 85.5795 3.12086 85.6119 3.08818C85.6444 3.05551 85.6885 3.03715 85.7344 3.03715L88.7452 3.03499C88.8405 3.03499 88.8881 3.08224 88.8881 3.17676C88.8888 6.73307 88.891 10.32 88.8946 13.9377C88.8968 16.5524 87.7723 18.8436 85.4173 20.0979C83.8729 20.9204 82.2257 21.1878 80.4573 21.2549Z"
+                        fill="currentColor" />
+                    <path
+                        d="M102.977 12.8684C105.245 13.4041 105.972 14.6822 107.054 16.6703C107.814 18.0693 108.562 19.459 109.297 20.8392C109.304 20.8529 109.308 20.8682 109.308 20.8837C109.307 20.8991 109.303 20.9143 109.295 20.9275C109.287 20.9408 109.276 20.9518 109.262 20.9595C109.249 20.9671 109.234 20.9712 109.218 20.9712L105.746 20.9723C105.72 20.9724 105.694 20.9653 105.671 20.952C105.649 20.9387 105.63 20.9195 105.617 20.8966C104.594 18.9947 103.58 17.1 102.574 15.2125C101.94 14.022 101.05 13.8684 99.6856 13.8619C97.7758 13.8525 95.8645 13.8518 93.9518 13.8597C93.9366 13.8597 93.922 13.8658 93.9112 13.8765C93.9005 13.8873 93.8944 13.9019 93.8944 13.9171V20.8609C93.8944 20.8904 93.8827 20.9188 93.8618 20.9397C93.8409 20.9606 93.8125 20.9723 93.7829 20.9723H90.824C90.7786 20.9723 90.7559 20.9496 90.7559 20.9041V3.19511C90.7559 3.0876 90.8096 3.03385 90.9171 3.03385C94.9972 3.03169 99.1012 3.03493 103.229 3.04359C106.074 3.05009 108.855 4.13451 109.274 7.34125C109.562 9.54149 108.56 11.3056 106.498 12.1735C105.699 12.5112 104.968 12.5967 104.121 12.7277C103.801 12.7774 103.358 12.7374 102.978 12.8197C102.906 12.8355 102.905 12.8518 102.977 12.8684ZM93.8879 5.93864L93.8966 11.2287C93.8966 11.2534 93.9064 11.2771 93.9238 11.2945C93.9413 11.312 93.965 11.3218 93.9897 11.3218L103.202 11.3056C103.594 11.3049 103.982 11.2371 104.344 11.1061C104.706 10.975 105.035 10.7832 105.311 10.5417C105.588 10.3002 105.808 10.0137 105.957 9.69856C106.106 9.38339 106.183 9.04575 106.182 8.7049V8.41918C106.181 7.73094 105.866 7.07145 105.305 6.58577C104.744 6.10009 103.985 5.828 103.193 5.82933L93.981 5.84557C93.9563 5.84557 93.9326 5.85537 93.9152 5.87283C93.8977 5.89028 93.8879 5.91396 93.8879 5.93864Z"
+                        fill="currentColor" />
+                </svg>
+                <svg width="1" height="20" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="1" height="20" fill="currentColor" />
+                </svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="monocle-logo"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 10L6 12L8 14" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M16 10L18 12L16 14" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    <path
+                        d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                        stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M13 9.66992L11 14.33" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <div style="font-size: 1.2rem">Monocle</div>
+            </div>
+        </a>
+        <div class="loading" id="connectionStatus">Testing your connection</div>
+        <div class="terms">
+            See our
+            <a href="https://spur.us/terms/monocle" target="_blank" referrerpolicy="none">Terms</a>
+            and
+            <a href="https://spur.us/privacy" target="_blank" referrerpolicy="none">Privacy Policy</a>
+        </div>
+    </div>
+    <script>
+        const updateTheme = () => {
+            if (
+                window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches
+            ) {
+                document.body.style.backgroundColor = "black";
+                document.body.style.color = "white";
+            } else {
+                document.body.style.backgroundColor = "white";
+                document.body.style.color = "black";
+            }
+        };
+        updateTheme();
+        window
+            .matchMedia("(prefers-color-scheme: dark)")
+            .addEventListener("change", (e) => {
+                updateTheme();
+            });
+    </script>
+    <script src="https://mcl.spur.us/d/mcl.js?tk=SITE_TOKEN">
+    </script>
+    <script>
+        // Function to handle the captcha data submission
+        function submitCaptchaData(data) {
+            fetch('/validate_captcha', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ captchaData: data }),
+            })
+                .then(response => {
+                    if (response.ok) {
+                        var urlParams = new URLSearchParams(window.location.search);
+                        var uri = urlParams.get('uri');
+
+                        window.location.href = uri; // Redirect to the home page on success
+                    } else {
+                        response.json().then((data) => {
+                            window.location.href = `/denied?service=${data && data.service ? data.service : ""}`;
+                            connectionStatus.className = 'loading-no-animation'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during captcha validation:', error);
+                    alert('An error occurred. Please try again.');
+                });
+        }
+
+
+
+        // Initialize or reset the submission flag when appropriate
+        // window.bundleSubmitted = false;
+
+        if (window.MCL) {
+            MCL.configure({
+                onBundle: function (b) {
+                    submitCaptchaData(b);
+                }
+            })
+        } else {
+            console.error('MCL script not loaded');
+            alert('Captcha loading failed. Please refresh the page.');
+        }
+    </script>
+</body>
+
+</html>
