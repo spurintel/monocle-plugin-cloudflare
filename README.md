@@ -27,8 +27,11 @@ To install this worker from the command line, make sure you have `wrangler` inst
 $ npm install -g wrangler
 ```
 
-Make sure you get your `VERIFY_TOKEN` and `SITE_TOKEN` from Spur. You may need to specify which environment these are deployed to with the `--env ENVIRONMENT` options.
+You will need to update the `wrangler.toml` file and set your `account_id` and `route`.
 
+This utility supports both user and Spur managed encryption. You may need to specify which environment these are deployed to with the `--env ENVIRONMENT` options.
+
+If you selected Spur managed encryption, set the following env variables:
 ```sh
 $ wranger secret put VERIFY_TOKEN
 $ wranger secret put SITE_TOKEN
@@ -36,10 +39,17 @@ $ wranger secret put SITE_TOKEN
 $ wrangler secret put COOKIE_SECRET_VALUE
 ```
 
+If you selected User managed encryption, set the following env variables:
 ```sh
-$ npm run deploy
+$ wranger secret put PRIVATE_KEY
+$ wranger secret put SITE_TOKEN
+# This following command is hopefully only temporary until we come up with a stateful solution. This is similar to what is done in our NGINX version
+$ wrangler secret put COOKIE_SECRET_VALUE
+```
+
+
+```sh
+$ npm run deploy-spur-managed
 # or
-$ yarn run deploy
-# or
-$ pnpm run deploy
+$ npm run deploy-user-managed
 ```

@@ -3,12 +3,13 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"deploy": "wrangler deploy index.js --env production",
-		"dev": "wrangler dev index.js",
-		"test": "vitest"
+		"deploy-spur-managed": "wrangler deploy index-spur-managed.js --env production",
+		"deploy-user-managed": "wrangler deploy index-user-managed.js --env development",
+		"dev": "wrangler dev index.js"
 	},
 	"dependencies": {
-		"itty-router": "^2.6.1"
+		"itty-router": "^2.6.1",
+		"jose": "^5.2.3"
 	},
 	"devDependencies": {
 		"wrangler": "^3.43.0"

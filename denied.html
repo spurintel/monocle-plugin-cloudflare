@@ -120,8 +120,7 @@
                 <div style="font-size: 1.2rem">Monocle</div>
             </div>
         </a>
-        <div class="loading" id="connectionStatus">Captcha validation failed. Please disconnect from any VPNs or proxies
-            and try again.</div>
+        <div class="loading" id="connectionStatus">Captcha validation failed. Please disconnect from REPLACE_ME.</div>
         <div class="terms">
             See our
             <a href="https://spur.us/terms/monocle" target="_blank" referrerpolicy="none">Terms</a>
@@ -148,11 +147,7 @@
             .addEventListener("change", (e) => {
                 updateTheme();
             });
-        var urlParams = new URLSearchParams(window.location.search);
-        var service = urlParams.get('service');
-        if (service && service !== "") {
-            connectionStatus.textContent = `Captcha validation failed. Please disconnect from ${service}`;
-        }
+
     </script>
 </body>
 
