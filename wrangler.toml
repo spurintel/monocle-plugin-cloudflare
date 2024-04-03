@@ -1,8 +1,3 @@
 name = "monocle-splash-page" # todo
 main = "index.js"
 compatibility_date = "2022-05-03"
-account_id = "5cdc2a14857f507c856d0cbfdb1f702c"
-workers_dev = false # Set to false to deploy to custom domain
-
-[env.production]
-route = "mclcfl.com/*" # Adjust accordingly
