@@ -29,7 +29,7 @@ $ npm install -g wrangler
 
 You will need to update the `wrangler.toml` file and set your `account_id` and `route`.
 
-This utility supports both user and Spur managed encryption. You may need to specify which environment these are deployed to with the `--env ENVIRONMENT` options.
+This utility supports both user and Spur managed encryption. If you are creating a new deployment for this project, the user managed encryption is much more performant. You may need to specify which environment these are deployed to with the `--env ENVIRONMENT` options.
 
 If you selected Spur managed encryption, set the following env variables:
 ```sh
