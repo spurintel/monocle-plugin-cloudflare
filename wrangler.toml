@@ -5,4 +5,4 @@ account_id = "5cdc2a14857f507c856d0cbfdb1f702c"
 workers_dev = false # Set to false to deploy to custom domain
 
 [env.development]
-route = "monocle-demo.com/*" # Adjust accordingly
+routes = ["mclcfl.com/*", "monocle-demo.com /*"] # Adjust accordingly

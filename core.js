@@ -43,6 +43,7 @@ export function deniedPage(request, env) {
 	}
 	// Return the HTML with the string to the client
 	return new Response(denied.replace('REPLACE_ME', basicText), {
+		status: 403,
 		headers: {
 			'Content-Type': 'text/html',
 		},
