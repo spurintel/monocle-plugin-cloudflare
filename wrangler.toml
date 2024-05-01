@@ -5,4 +5,13 @@ account_id = "5cdc2a14857f507c856d0cbfdb1f702c"
 workers_dev = false # Set to false to deploy to custom domain
 
 [env.development]
-routes = ["mclcfl.com/*", "monocle-demo.com /*"] # Adjust accordingly
+routes = [
+	{ pattern = "*mclcfl.com/*", zone_id = "7057188bc709a7f1b0b21c21bc1a03e7" },
+	{ pattern = "*monocle-demo.com/*", zone_id = "137bb093263cc8a987229fd3eb51ba96" },
+]
+
+[env.production]
+routes = [
+	{ pattern = "*mclcfl.com/*", zone_id = "7057188bc709a7f1b0b21c21bc1a03e7" },
+	{ pattern = "*monocle-demo.com/*", zone_id = "137bb093263cc8a987229fd3eb51ba96" },
+]
