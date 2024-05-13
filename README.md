@@ -36,6 +36,7 @@ If you selected Spur managed encryption, set the following env variables:
 $ wranger secret put VERIFY_TOKEN
 $ wranger secret put SITE_TOKEN
 # This following command is hopefully only temporary until we come up with a stateful solution. This is similar to what is done in our NGINX version
+# The cookie secret must be 32 bytes "openssl rand -hex 32"
 $ wrangler secret put COOKIE_SECRET_VALUE
 ```
 
@@ -43,7 +44,8 @@ If you selected User managed encryption, set the following env variables:
 ```sh
 $ wranger secret put PRIVATE_KEY
 $ wranger secret put SITE_TOKEN
-# This following command is hopefully only temporary until we come up with a stateful solution. This is similar to what is done in our NGINX version
+# This following command is hopefully only temporary until we come up with a stateful solution. This is similar to what is done in our NGINX version.
+# The cookie secret must be 32 bytes "openssl rand -hex 32"
 $ wrangler secret put COOKIE_SECRET_VALUE
 ```
 

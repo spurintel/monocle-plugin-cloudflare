@@ -2,30 +2,10 @@ import { Router } from 'itty-router';
 import { setSecureCookie, deniedPage, captchaPage, primaryHandler } from './core';
 const jose = require("jose");
 
-// Create a new router
 const router = Router();
-
-/*
-This route demonstrates path parameters, allowing you to extract fragments from the request
-URL.
-
-Try visit /example/hello and see the response.
-*/
 router.get('/captcha_page.html', captchaPage);
-
 router.get('/denied', deniedPage);
-
-/*
-This shows a different HTTP method, a POST.
-
-Try send a POST request using curl or another tool.
-
-Try the below curl command to send JSON:
-
-$ curl -X POST <worker> -H "Content-Type: application/json" -d '{"abc": "def"}'
-*/
 router.post('/validate_captcha', async (request, env) => {
-	// Define the URL of the third-party API
 	try {
 		// Assuming the incoming request's body is JSON and contains captchaData
 		const requestData = await request.json();
@@ -43,8 +23,6 @@ router.post('/validate_captcha', async (request, env) => {
 		// decode the plaintext Buffer and parse back to JSON
 		const data = JSON.parse(decoder.decode(decryptResult.plaintext));
 
-
-		// Assuming you have a way to get the client's IP address, if needed
 		// Cloudflare Workers provide `request.headers.get('CF-Connecting-IP')` for the client's IP
 		const clientIpAddress = request.headers.get('CF-Connecting-IP');
 
@@ -76,7 +54,6 @@ above, therefore it's useful as a 404 (and avoids us hitting worker exceptions, 
 Visit any page that doesn't exist (e.g. /foobar) to see it in action.
 */
 router.all('*', primaryHandler);
-
 
 export default {
 	fetch: router.handle,
