@@ -1,28 +1,9 @@
 import { Router } from 'itty-router';
 import { setSecureCookie, deniedPage, captchaPage, primaryHandler } from './core';
 
-// Create a new router
 const router = Router();
-
-/*
-This route demonstrates path parameters, allowing you to extract fragments from the request
-URL.
-
-Try visit /example/hello and see the response.
-*/
 router.get('/captcha_page.html', captchaPage);
-
 router.get('/denied', deniedPage);
-
-/*
-This shows a different HTTP method, a POST.
-
-Try send a POST request using curl or another tool.
-
-Try the below curl command to send JSON:
-
-$ curl -X POST <worker> -H "Content-Type: application/json" -d '{"abc": "def"}'
-*/
 router.post('/validate_captcha', async (request, env) => {
 	// Define the URL of the third-party API
 	const thirdPartyApiUrl = 'https://decrypt.mcl.spur.us/api/v1/assessment';
