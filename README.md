@@ -1,7 +1,7 @@
 # Monocle by Spur
 [![Deploy with Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/spurintel/monocle-plugin-cloudflare/tree/main/)
 
-Easily deploy a CloudFlare service worker with Monocle that will automatically protect your site from residential proxies, malware proxies, or other commerical anonymity services.
+Easily deploy a CloudFlare service worker with Monocle that will automatically protect your site from residential proxies, malware proxies, or other commercial anonymity services.
 
 ## Description
 
