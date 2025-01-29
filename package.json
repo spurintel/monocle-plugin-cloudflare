@@ -3,9 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"deploy-spur-managed": "wrangler deploy index-spur-managed.js --env production",
-		"deploy-user-managed": "wrangler deploy index-user-managed.js --env development",
-		"dev": "wrangler dev index.js"
+		"deploy": "wrangler deploy"
 	},
 	"dependencies": {
 		"itty-router": "^2.6.1",

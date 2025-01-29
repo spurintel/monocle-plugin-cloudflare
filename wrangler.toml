@@ -1,5 +1,5 @@
 name = "monocle-splash-page" # todo
-main = "index.js"
+main = "index-user-managed.js"
 compatibility_date = "2024-04-03"
 account_id = "5cdc2a14857f507c856d0cbfdb1f702c"
 workers_dev = false # Set to false to deploy to custom domain

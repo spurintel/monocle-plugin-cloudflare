@@ -20,37 +20,67 @@ support@spur.us
 
 ## Setup
 
-To install this worker from the command line, make sure you have `wrangler` installed globally.
+### Install Wrangler CLI
+Wrangler is the Cloudflare CLI tool that allows you to manage your Cloudflare Workers.
+In order to install the Monocle worker make sure you have `wrangler` installed globally.
 
 ```sh
-$ npm install -g wrangler
+npm install -g wrangler
 ```
 
-You will need to update the `wrangler.toml` file and set your `account_id` and `route`.
+Make sure you are logged in to your Cloudflare account with Wrangler.
 
-This utility supports both user and Spur managed encryption. If you are creating a new deployment for this project, the user managed encryption is much more performant. You may need to specify which environment these are deployed to with the `--env ENVIRONMENT` options.
-
-If you selected Spur managed encryption, set the following env variables:
 ```sh
-$ wrangler secret put VERIFY_TOKEN
-$ wrangler secret put SITE_TOKEN
-# This following command is hopefully only temporary until we come up with a stateful solution. This is similar to what is done in our NGINX version
+wrangler login
+```
+
+### Fork this repository
+
+In order to deploy this worker, you will need to fork this repository to your own GitHub account.
+This will allow you to make changes to the worker and deploy it to your own Cloudflare account.
+
+1. Navigate to the [GitHub repository](https://github.com/spurintel/monocle-plugin-cloudflare) for this worker.
+2. In the top-right corner of the page, click the **Fork** button.
+3. You will now have a copy of this repository in your own GitHub account.
+4. You can clone this repository to your local machine by running the following command:
+
+```sh
+git clone git@github.com:${YOUR_USERNAME_HERE}/monocle-plugin-cloudflare.git
+cd monocle-plugin-cloudflare
+npm install # Install dependencies
+```
+
+### Configure the worker
+
+You will need to create a `wrangler.toml` file and set your `account_id` and `route`.
+
+1. Open the `wrangler.toml` file in your text editor.
+2. Copy the example below and paste it into the `wrangler.toml` file.
+3. Update the `compatibility_date` field with the current date.
+4. Update the `account_id` field with your Cloudflare account ID.
+5. Update the `route` field with the route you want to deploy the worker to.
+6. Update the `zone_id` field with the zone you want to deploy the worker to.
+7. Save the file.
+
+```toml
+name = "monocle"
+main = "index-spur-managed.js"
+compatibility_date = "${TODAYS_DATE}"
+account_id = "${YOUR_ACCOUNT_ID}"
+workers_dev = false # Set to false to deploy to custom domain
+route = { pattern = "${YOUR_ROUTE}", zone_id = "${YOUR_ZONE}" }
+```
+
+### Set up your secrets
+```sh
+
+wrangler secret put VERIFY_TOKEN
+wrangler secret put SITE_TOKEN
 # The cookie secret must be 32 bytes "openssl rand -hex 32"
-$ wrangler secret put COOKIE_SECRET_VALUE
+wrangler secret put COOKIE_SECRET_VALUE
 ```
 
-If you selected User managed encryption, set the following env variables:
+### Deploy the worker
 ```sh
-$ wrangler secret put PRIVATE_KEY
-$ wrangler secret put SITE_TOKEN
-# This following command is hopefully only temporary until we come up with a stateful solution. This is similar to what is done in our NGINX version.
-# The cookie secret must be 32 bytes "openssl rand -hex 32"
-$ wrangler secret put COOKIE_SECRET_VALUE
-```
-
-
-```sh
-$ npm run deploy-spur-managed
-# or
-$ npm run deploy-user-managed
+ wrangler deploy
 ```
