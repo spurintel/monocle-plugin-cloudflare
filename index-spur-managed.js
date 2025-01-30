@@ -19,7 +19,7 @@ router.post('/validate_captcha', async (request, env) => {
 			headers: {
 				'Content-Type': 'text/plain',
 				// Token should be securely stored and retrieved; adjust as needed
-				'Token': env.VERIFY_TOKEN,
+				'Token': env.SECRET_KEY,
 			},
 		});
 
