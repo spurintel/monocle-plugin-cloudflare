@@ -16,7 +16,7 @@ function parseCookies(header) {
 
 export function captchaPage(request, env) {
 	// Return the HTML with the string to the client
-	return new Response(captcha.replace('PUBLIC_KEY', env.PUBLIC_KEY), {
+	return new Response(captcha.replace('PUBLISHABLE_KEY', env.PUBLISHABLE_KEY), {
 		headers: {
 			'Content-Type': 'text/html',
 		},

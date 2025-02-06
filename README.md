@@ -73,7 +73,7 @@ route = { pattern = "${YOUR_ROUTE}", zone_id = "${YOUR_ZONE}" }
 
 ### Set up your secrets
 ```sh
-wrangler secret put PUBLIC_KEY
+wrangler secret put PUBLISHABLE_KEY
 wrangler secret put SECRET_KEY
 # The cookie secret must be 32 bytes "openssl rand -hex 32"
 wrangler secret put COOKIE_SECRET_VALUE
