@@ -201,9 +201,14 @@
                         var uri = urlParams.get('uri');
 
                         window.location.href = uri; // Redirect to the home page on success
+                    } else if (response.status === 400) {
+                        response.text().then((data) => {
+                            window.location.href = `/error?err=${data}`;
+                            connectionStatus.className = 'loading-no-animation';
+                        });
                     } else {
-                        response.json().then((data) => {
-                            window.location.href = `/denied?service=${data && data.service ? data.service : ""}`;
+                        response.text().then((data) => {
+                            window.location.href = `/denied?service=${data}`;
                             connectionStatus.className = 'loading-no-animation'
                         });
                     }

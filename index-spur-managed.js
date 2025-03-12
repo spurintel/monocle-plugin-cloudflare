@@ -1,9 +1,10 @@
 import { Router } from 'itty-router';
-import { setSecureCookie, deniedPage, captchaPage, primaryHandler } from './core';
+import { setSecureCookie, deniedPage, errorPage, captchaPage, primaryHandler } from './core';
 
 const router = Router();
 router.get('/captcha_page.html', captchaPage);
 router.get('/denied', deniedPage);
+router.get('/error', errorPage);
 router.post('/validate_captcha', async (request, env) => {
 	// Define the URL of the third-party API
 	const thirdPartyApiUrl = 'https://decrypt.mcl.spur.us/api/v1/assessment';
@@ -24,6 +25,10 @@ router.post('/validate_captcha', async (request, env) => {
 		});
 
 		if (!apiResponse.ok) {
+			console.log(apiResponse.status)
+			if (apiResponse.status === 401 || apiResponse.status === 403) {
+				return new Response(`Spur SECRET_KEY is incorrect for this deployment`, { status: 400 });
+			}
 			throw new Error(`API call failed: ${apiResponse.statusText}`);
 		}
 		const data = await apiResponse.json();
@@ -38,8 +43,8 @@ router.post('/validate_captcha', async (request, env) => {
 		const timeDifference = Math.abs(currentTime - responseTime) / 1000;
 
 		// Check if the time difference is within 5 seconds and other conditions
-		if (timeDifference > 5 || data.ip !== clientIpAddress || data.anon) {
-			return new Response(JSON.stringify(data), { status: 403 });
+		if (timeDifference > 5 || data.anon) {
+			return new Response(data.service, { status: 403 });
 		}
 
 		// If validation is successful, you might want to set a cookie or similar here
@@ -48,8 +53,8 @@ router.post('/validate_captcha', async (request, env) => {
 
 		return new Response("Captcha validated successfully", { status: 200, headers: headers });
 	} catch (error) {
-		console.error(`Error calling third-party API: ${error.message}`);
-		return new Response("Internal Server Error", { status: 500 });
+		console.error(`Error verifying bundle with https://decrypt.mcl.spur.us/api/v1/assessment: ${error.message}`);
+		return new Response(`Error verifying bundle with https://decrypt.mcl.spur.us/api/v1/assessment: ${error.message}`, { status: 400 });
 	}
 });
 

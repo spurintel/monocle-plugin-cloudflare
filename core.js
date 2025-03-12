@@ -1,5 +1,6 @@
 import captcha from './captcha_page.html';
 import denied from './denied.html';
+import error from './error.html';
 
 function parseCookies(header) {
 	let list = {}
@@ -13,6 +14,18 @@ function parseCookies(header) {
 	})
 	return list
 }
+
+
+// Function to escape HTML characters to prevent XSS
+function escapeHtml(str) {
+	if (!str) return '';
+	return str
+	  .replace(/&/g, '&amp;')
+	  .replace(/</g, '&lt;')
+	  .replace(/>/g, '&gt;')
+	  .replace(/"/g, '&quot;')
+	  .replace(/'/g, '&#39;');
+  }
 
 export function captchaPage(request, env) {
 	// Return the HTML with the string to the client
@@ -30,10 +43,27 @@ export function deniedPage(request, env) {
 	if (paramValue && paramValue !== "") {
 		basicText = paramValue;
 	}
-
+	basicText = escapeHtml(basicText);
 	// Return the HTML with the string to the client
 	return new Response(denied.replace('REPLACE_ME', basicText), {
 		status: 403,
+		headers: {
+			'Content-Type': 'text/html',
+		},
+	});
+}
+
+export function errorPage(request, env) {
+	let basicText = 'any VPNs or proxies and try again';
+	const url = new URL(request.url);
+	const paramValue = url.searchParams.get('err');
+	if (paramValue && paramValue !== "") {
+		basicText = paramValue;
+	}
+	basicText = escapeHtml(basicText);
+	// Return the HTML with the string to the client
+	return new Response(error.replace('REPLACE_ME', basicText), {
+		status: 400,
 		headers: {
 			'Content-Type': 'text/html',
 		},
