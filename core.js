@@ -72,7 +72,7 @@ export async function setSecureCookie(request, env) {
 	const ivHex = bufToHex(iv);
 
 	const headers = new Headers();
-	headers.append('Set-Cookie', `MCLVALID=${ivHex}.${encryptedValueHex}; Secure; HttpOnly; Path=/; SameSite=Strict`);
+	headers.append('Set-Cookie', `MCLVALID=${ivHex}.${encryptedValueHex}; Secure; HttpOnly; Path=/; SameSite=Lax`);
 	return headers;
 }
 
