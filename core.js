@@ -111,10 +111,12 @@ export async function validateCookie(request, env) {
 	const [clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split('|');
 
 	if (request.headers.get('CF-Connecting-IP') !== clientIpAddress) {
+		console.log(`Mismatch IP address. Expecting ${clientIpAddress}, Got ${request.headers.get('CF-Connecting-IP') }`)
 		return false;
 	}
 
 	if (Math.floor(Date.now() / 1000) >= parseInt(expiryTime, 10)) {
+		console.log(`Cookie has expired.`)
 		return false;
 	}
 
