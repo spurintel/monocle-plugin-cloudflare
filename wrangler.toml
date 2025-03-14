@@ -1,20 +1,14 @@
-name = "monocle-splash-page" # todo
+name = "monocle-splash-page-development" # todo
 main = "index-spur-managed.js"
 compatibility_date = "2024-04-03"
 account_id = "5cdc2a14857f507c856d0cbfdb1f702c"
 workers_dev = false # Set to false to deploy to custom domain
 
-[env.development]
 routes = [
 	{ pattern = "*mclcfl.com/*", zone_id = "7057188bc709a7f1b0b21c21bc1a03e7" },
 	{ pattern = "*monocle-demo.com/*", zone_id = "137bb093263cc8a987229fd3eb51ba96" },
 ]
 
-[env.production]
-routes = [
-	{ pattern = "*mclcfl.com/*", zone_id = "7057188bc709a7f1b0b21c21bc1a03e7" },
-	{ pattern = "*monocle-demo.com/*", zone_id = "137bb093263cc8a987229fd3eb51ba96" },
-]
 [observability]
 enabled = true
 head_sampling_rate = 1 # optional. default = 1.

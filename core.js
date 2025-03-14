@@ -1,6 +1,7 @@
 import captcha from './captcha_page.html';
-import denied from './denied.html';
-import error from './error.html';
+
+// Replace these variables if there are other services you wish to allow access to your service
+export const EXEMPTED_SERVICES = ['WARP_VPN', 'ICLOUD_RELAY_PROXY'];
 
 function parseCookies(header) {
 	let list = {}
@@ -20,54 +21,11 @@ function parseCookies(header) {
 function escapeHtml(str) {
 	if (!str) return '';
 	return str
-	  .replace(/&/g, '&amp;')
-	  .replace(/</g, '&lt;')
-	  .replace(/>/g, '&gt;')
-	  .replace(/"/g, '&quot;')
-	  .replace(/'/g, '&#39;');
-  }
-
-export function captchaPage(request, env) {
-	// Return the HTML with the string to the client
-	return new Response(captcha.replace('PUBLISHABLE_KEY', env.PUBLISHABLE_KEY), {
-		headers: {
-			'Content-Type': 'text/html',
-		},
-	});
-}
-
-export function deniedPage(request, env) {
-	let basicText = 'any VPNs or proxies and try again';
-	const url = new URL(request.url);
-	const paramValue = url.searchParams.get('service');
-	if (paramValue && paramValue !== "") {
-		basicText = paramValue;
-	}
-	basicText = escapeHtml(basicText);
-	// Return the HTML with the string to the client
-	return new Response(denied.replace('REPLACE_ME', basicText), {
-		status: 403,
-		headers: {
-			'Content-Type': 'text/html',
-		},
-	});
-}
-
-export function errorPage(request, env) {
-	let basicText = 'any VPNs or proxies and try again';
-	const url = new URL(request.url);
-	const paramValue = url.searchParams.get('err');
-	if (paramValue && paramValue !== "") {
-		basicText = paramValue;
-	}
-	basicText = escapeHtml(basicText);
-	// Return the HTML with the string to the client
-	return new Response(error.replace('REPLACE_ME', basicText), {
-		status: 400,
-		headers: {
-			'Content-Type': 'text/html',
-		},
-	});
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
 }
 
 export async function primaryHandler(request, env) {
@@ -80,8 +38,12 @@ export async function primaryHandler(request, env) {
 		// If the MCLVALID cookie is present and valid, proceed with the original request
 		return fetch(request) // Simply proxy the request in this example
 	} else {
-		// If no valid cookie, redirect to the captcha page
-		return Response.redirect(`${url.protocol}//${url.host}/captcha_page.html?uri=${url.pathname}`, 302)
+		// Return the HTML with the string to the client
+		return new Response(captcha.replace('PUBLISHABLE_KEY', env.PUBLISHABLE_KEY).replace('REPLACE_REDIRECT', url.pathname), {
+			headers: {
+				'Content-Type': 'text/html',
+			},
+		});
 	}
 }
 
@@ -164,5 +126,5 @@ function bufToHex(buffer) {
 }
 
 function hexToBuf(hex) {
-    return new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+	return new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 }

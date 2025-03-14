@@ -187,38 +187,44 @@
     </script>
     <script>
         // Function to handle the captcha data submission
-        function submitCaptchaData(data) {
-            fetch('/validate_captcha', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ captchaData: data }),
-            })
-                .then(response => {
-                    if (response.ok) {
-                        var urlParams = new URLSearchParams(window.location.search);
-                        var uri = urlParams.get('uri');
-
-                        window.location.href = uri; // Redirect to the home page on success
-                    } else if (response.status === 400) {
-                        response.text().then((data) => {
-                            window.location.href = `/error?err=${data}`;
-                            connectionStatus.className = 'loading-no-animation';
-                        });
-                    } else {
-                        response.text().then((data) => {
-                            window.location.href = `/denied?service=${data}`;
-                            connectionStatus.className = 'loading-no-animation'
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error during captcha validation:', error);
-                    alert('An error occurred. Please try again.');
-                });
-        }
-
+       // Function to handle the captcha data submission
+// Function to handle captcha data submission
+function submitCaptchaData(data) {
+  fetch('/validate_captcha', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ captchaData: data }),
+  })
+    .then(response => {
+      if (response.ok) {
+        window.location.href = 'REPLACE_REDIRECT'; // On success, redirect as before.
+      } else {
+        connectionStatus.className = 'loading-no-animation';
+        response.text().then((message) => {
+          // Use provided error message or fallback to default text.
+          let basicText = message && message.trim() !== "" 
+            ? message 
+            : "any VPNs or proxies and try again";
+          
+          // For a 403 response, use the Denied page markup.
+          if (response.status === 403) {
+            document.title = "Monocle CAPTCHA Denied";
+            document.getElementById('connectionStatus').textContent = `Captcha validation failed. Please disconnect from ${basicText}`;
+          } else {
+            // For any other error status (like 400), use the Error page markup.
+            document.title = "Monocle Error";
+            document.getElementById('connectionStatus').textContent = basicText;
+          }
+          // Reapply theme in case the new content needs adjustment.
+          updateTheme();
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Error during captcha validation:', error);
+      alert('An error occurred. Please try again.');
+    });
+}
 
 
         // Initialize or reset the submission flag when appropriate

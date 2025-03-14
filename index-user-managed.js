@@ -1,11 +1,8 @@
 import { Router } from 'itty-router';
-import { setSecureCookie, deniedPage, captchaPage, errorPage, primaryHandler } from './core';
+import { setSecureCookie, primaryHandler, EXEMPTED_SERVICES } from './core';
 const jose = require("jose");
 
 const router = Router();
-router.get('/captcha_page.html', captchaPage);
-router.get('/denied', deniedPage);
-router.get('/error', errorPage);
 router.post('/validate_captcha', async (request, env) => {
 	try {
 		// Assuming the incoming request's body is JSON and contains captchaData
@@ -33,7 +30,7 @@ router.post('/validate_captcha', async (request, env) => {
 		const timeDifference = Math.abs(currentTime - responseTime) / 1000;
 
 		// Check if the time difference is within 5 seconds and other conditions
-		if (timeDifference > 5 || data.anon) {
+		if ((timeDifference > 5 || data.anon) && !EXEMPTED_SERVICES.includes(data.service)) {
 			return new Response(data.service, { status: 403 });
 		}
 
