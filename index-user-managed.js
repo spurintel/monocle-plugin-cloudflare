@@ -21,9 +21,6 @@ router.post('/validate_captcha', async (request, env) => {
 		// decode the plaintext Buffer and parse back to JSON
 		const data = JSON.parse(decoder.decode(decryptResult.plaintext));
 
-		// Cloudflare Workers provide `request.headers.get('CF-Connecting-IP')` for the client's IP
-		const clientIpAddress = request.headers.get('CF-Connecting-IP');
-
 		// Parse the timestamp from the response and calculate the difference
 		const responseTime = new Date(data.ts);
 		const currentTime = new Date();

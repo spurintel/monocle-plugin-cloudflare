@@ -31,7 +31,6 @@ function escapeHtml(str) {
 export async function primaryHandler(request, env) {
 	const url = new URL(request.url)
 	const cookies = parseCookies(request.headers.get('Cookie'))
-	const clientIpAddress = request.headers.get('CF-Connecting-IP') // Cloudflare specific header for client IP
 
 	// Check if the secure cookie is present and valid
 	if (cookies.MCLVALID && await validateCookie(request, env)) {
@@ -48,7 +47,11 @@ export async function primaryHandler(request, env) {
 }
 
 export async function setSecureCookie(request, env) {
-	const clientIpAddress = request.headers.get('CF-Connecting-IP');
+	const clientIpAddress = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Real-IP");
+	if (!clientIpAddress) {
+		console.log("ERROR: No client IP found in headers.");
+		console.log(JSON.stringify([...request.headers]));
+	}
 	const expiryTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
 	const cookieValue = `${clientIpAddress}|${expiryTime}`;
 
@@ -77,6 +80,11 @@ export async function setSecureCookie(request, env) {
 }
 
 export async function validateCookie(request, env) {
+	const clientIp = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Real-IP");
+	if (!clientIp) {
+		console.log("ERROR: No client IP found in headers.");
+		console.log(JSON.stringify([...request.headers]));
+	}
 	const cookieHeader = request.headers.get('Cookie');
 	if (!cookieHeader) {
 		return false;
@@ -110,8 +118,8 @@ export async function validateCookie(request, env) {
 
 	const [clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split('|');
 
-	if (request.headers.get('CF-Connecting-IP') !== clientIpAddress) {
-		console.log(`Mismatch IP address. Expecting ${clientIpAddress}, Got ${request.headers.get('CF-Connecting-IP') }`)
+	if (clientIp !== clientIpAddress) {
+		console.log(`Mismatch IP address. Expecting ${clientIpAddress}, Got ${clientIp}`)
 		return false;
 	}
 

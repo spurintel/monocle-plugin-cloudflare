@@ -30,9 +30,6 @@ router.post('/validate_captcha', async (request, env) => {
 		}
 		const data = await apiResponse.json();
 
-		// Assuming you have a way to get the client's IP address, if needed
-		// Cloudflare Workers provide `request.headers.get('CF-Connecting-IP')` for the client's IP
-		const clientIpAddress = request.headers.get('CF-Connecting-IP');
 
 		// Parse the timestamp from the response and calculate the difference
 		const responseTime = new Date(data.ts);
