@@ -38,7 +38,7 @@ export async function primaryHandler(request, env) {
 		return fetch(request) // Simply proxy the request in this example
 	} else {
 		// Return the HTML with the string to the client
-		return new Response(captcha.replace('PUBLISHABLE_KEY', env.PUBLISHABLE_KEY).replace('REPLACE_REDIRECT', url.pathname), {
+		return new Response(captcha.replace('PUBLISHABLE_KEY', env.PUBLISHABLE_KEY).replace('REPLACE_REDIRECT', url.href), {
 			headers: {
 				'Content-Type': 'text/html',
 			},
