@@ -118,6 +118,7 @@ export async function validateCookie(request, env) {
 
 		const [clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split('|');
 	} catch (error) {
+		console.log(`Error with decrypt: ${error}`);
 		return false;
 	}
 	if (clientIp !== clientIpAddress) {
