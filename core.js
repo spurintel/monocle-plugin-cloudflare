@@ -109,6 +109,7 @@ export async function validateCookie(request, env) {
 		false,
 		["encrypt", "decrypt"]
 	);
+	var clientIpAddress, expiryTime;
 	try {
 		const decryptedValue = await crypto.subtle.decrypt(
 			{ name: "AES-GCM", iv: hexToBuf(ivHex) },
@@ -116,7 +117,7 @@ export async function validateCookie(request, env) {
 			hexToBuf(encryptedValueHex)
 		);
 
-		const [clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split('|');
+		[clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split('|');
 	} catch (error) {
 		console.log(`Error with decrypt: ${error}`);
 		return false;
