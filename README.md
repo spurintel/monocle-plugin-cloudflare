@@ -18,7 +18,11 @@ This CloudFlare service worker will automatically force a Monocle render on new 
 
 support@spur.us
 
-## Setup
+## Terraform
+
+Use our official [Terraform module](https://registry.terraform.io/modules/spurintel/worker-spur-monocle/cloudflare/latest) to quickly integrate the Monocle Cloudflare worker into your Terraform-enabled project.
+
+## Wrangler Setup
 
 ### Install Wrangler CLI
 Wrangler is the Cloudflare CLI tool that allows you to manage your Cloudflare Workers.
