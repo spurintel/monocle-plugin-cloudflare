@@ -109,15 +109,17 @@ export async function validateCookie(request, env) {
 		false,
 		["encrypt", "decrypt"]
 	);
+	try {
+		const decryptedValue = await crypto.subtle.decrypt(
+			{ name: "AES-GCM", iv: hexToBuf(ivHex) },
+			secretKey,
+			hexToBuf(encryptedValueHex)
+		);
 
-	const decryptedValue = await crypto.subtle.decrypt(
-		{ name: "AES-GCM", iv: hexToBuf(ivHex) },
-		secretKey,
-		hexToBuf(encryptedValueHex)
-	);
-
-	const [clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split('|');
-
+		const [clientIpAddress, expiryTime] = new TextDecoder().decode(decryptedValue).split('|');
+	} catch (error) {
+		return false;
+	}
 	if (clientIp !== clientIpAddress) {
 		console.log(`Mismatch IP address. Expecting ${clientIpAddress}, Got ${clientIp}`)
 		return false;
