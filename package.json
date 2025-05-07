@@ -3,13 +3,15 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"deploy": "wrangler deploy"
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev"
 	},
 	"dependencies": {
-		"itty-router": "^2.6.1",
-		"jose": "^5.2.3"
+		"@spur.us/monocle-backend": "^0.2.1"
 	},
 	"devDependencies": {
-		"wrangler": "^3.43.0"
+		"@types/node": "^22.15.15",
+		"wrangler": "^4.14.3"
 	}
 }
