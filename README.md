@@ -70,7 +70,7 @@ You will need to create a `wrangler.toml` file and set your `account_id` and `ro
 
 ```toml
 name = "monocle"
-main = "index-spur-managed.js"
+main = "src/index.ts"
 compatibility_date = "${TODAYS_DATE}"
 compatibility_flags = [ "nodejs_compat" ]
 account_id = "${YOUR_ACCOUNT_ID}"
