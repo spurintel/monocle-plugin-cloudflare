@@ -1,0 +1,4 @@
+COOKIE_SECRET_VALUE=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+PUBLISHABLE_KEY=test_publishable_key
+PRIVATE_KEY=test_private_key
+SECRET_KEY=test_secret_key

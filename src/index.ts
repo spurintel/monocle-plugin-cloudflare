@@ -46,14 +46,14 @@ export default {
  * @returns {Promise<Response>} Response indicating validation success or failure
  */
 async function validateCaptchaHandler(request: Request, env: Env): Promise<Response> {
+	let privateKeyPem: string | undefined;
+	if (env.PRIVATE_KEY && env.PRIVATE_KEY.length > 0) {
+		privateKeyPem = env.PRIVATE_KEY;
+	}
+
 	try {
 		const monocle = await createMonocleClient({ secretKey: env.SECRET_KEY });
 		const body = (await request.json()) as { captchaData: string };
-
-		let privateKeyPem: string | undefined;
-		if (env.PRIVATE_KEY && env.PRIVATE_KEY.length > 0) {
-			privateKeyPem = env.PRIVATE_KEY;
-		}
 
 		const assessment = await monocle.decryptAssessment(body.captchaData, {
 			privateKeyPem,
@@ -75,12 +75,10 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 		return new Response('Captcha validated successfully', { status: 200, headers: headers });
 	} catch (error: unknown) {
 		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-		console.error(
-			`Error verifying bundle with https://decrypt.mcl.spur.us/api/v1/assessment: ${errorMessage}`
-		);
-		return new Response(
-			`Error verifying bundle with https://decrypt.mcl.spur.us/api/v1/assessment: ${errorMessage}`,
-			{ status: 400 }
-		);
+		const errorPrefix = privateKeyPem
+			? 'Error verifying bundle with private key'
+			: 'Error verifying bundle with https://decrypt.mcl.spur.us/api/v1/assessment';
+		console.error(`${errorPrefix}: ${errorMessage}`);
+		return new Response(`${errorPrefix}: ${errorMessage}`, { status: 400 });
 	}
 }
