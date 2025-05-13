@@ -34,7 +34,7 @@ describe('Cloudflare Worker', () => {
 		const response = await SELF.fetch(request);
 		expect(response.status).toBe(400);
 		const text = await response.text();
-		expect(text).toContain('Error verifying bundle');
+		expect(text).toContain('Error verifying assessment');
 	});
 
 	it('should allow requests with valid cookie', async () => {

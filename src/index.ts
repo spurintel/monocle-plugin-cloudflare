@@ -1,7 +1,11 @@
 import { COOKIE_NAME, EXEMPTED_SERVICES } from './constants';
 import { parseCookies, validateCookie, setSecureCookie } from './cookies';
 import captcha from './templates/captcha_page.html';
-import { createMonocleClient } from '@spur.us/monocle-backend';
+import {
+	createMonocleClient,
+	MonocleAPIError,
+	MonocleDecryptionError,
+} from '@spur.us/monocle-backend';
 
 /**
  * Cloudflare Worker that handles captcha validation and request routing
@@ -74,11 +78,20 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 		const headers = await setSecureCookie(request, env);
 		return new Response('Captcha validated successfully', { status: 200, headers: headers });
 	} catch (error: unknown) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-		const errorPrefix = privateKeyPem
-			? 'Error verifying bundle with private key'
-			: 'Error verifying bundle with https://decrypt.mcl.spur.us/api/v1/assessment';
-		console.error(`${errorPrefix}: ${errorMessage}`);
-		return new Response(`${errorPrefix}: ${errorMessage}`, { status: 400 });
+		let errorMessage: string;
+
+		if (error instanceof MonocleDecryptionError) {
+			console.error(`Error verifying assessment with private key: ${error.message}`);
+		} else if (error instanceof MonocleAPIError) {
+			console.error(
+				`Error verifying assessment with https://decrypt.mcl.spur.us/api/v1/assessment: ${error.message}`
+			);
+		} else if (error instanceof Error) {
+			console.error(`Error verifying assessment: ${error.message}`);
+		} else {
+			errorMessage = 'Unknown error occurred';
+		}
+
+		return new Response('Error verifying assessment', { status: 400 });
 	}
 }
