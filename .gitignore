@@ -4,3 +4,8 @@
 *.lock
 *.log
 .idea
+
+# wrangler project
+
+.dev.vars
+.wrangler/

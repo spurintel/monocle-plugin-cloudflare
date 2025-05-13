@@ -25,6 +25,7 @@ Use our official [Terraform module](https://registry.terraform.io/modules/spurin
 ## Wrangler Setup
 
 ### Install Wrangler CLI
+
 Wrangler is the Cloudflare CLI tool that allows you to manage your Cloudflare Workers.
 In order to install the Monocle worker make sure you have `wrangler` installed globally.
 
@@ -60,22 +61,25 @@ You will need to create a `wrangler.toml` file and set your `account_id` and `ro
 
 1. Open the `wrangler.toml` file in your text editor.
 2. Copy the example below and paste it into the `wrangler.toml` file.
-3. Update the `compatibility_date` field with the current date.
-4. Update the `account_id` field with your Cloudflare account ID.
-5. Update the `route` field with the route you want to deploy the worker to.
-6. Update the `zone_id` field with the zone you want to deploy the worker to.
-7. Save the file.
+3. Update the `compatibility_date` field with the current date. This value must be greater than `2024-11-11`.
+4. Add `nodejs_compat` to `compatibility_flags`.
+5. Update the `account_id` field with your Cloudflare account ID.
+6. Update the `route` field with the route you want to deploy the worker to.
+7. Update the `zone_id` field with the zone you want to deploy the worker to.
+8. Save the file.
 
 ```toml
 name = "monocle"
-main = "index-spur-managed.js"
+main = "src/index.ts"
 compatibility_date = "${TODAYS_DATE}"
+compatibility_flags = [ "nodejs_compat" ]
 account_id = "${YOUR_ACCOUNT_ID}"
 workers_dev = false # Set to false to deploy to custom domain
 route = { pattern = "${YOUR_ROUTE}", zone_id = "${YOUR_ZONE}" }
 ```
 
 ### Set up your secrets
+
 ```sh
 wrangler secret put PUBLISHABLE_KEY
 wrangler secret put SECRET_KEY
@@ -83,7 +87,14 @@ wrangler secret put SECRET_KEY
 wrangler secret put COOKIE_SECRET_VALUE
 ```
 
+To use manual decryption set the `PRIVATE_KEY` secret. This is feature is only available to customers with Enterprise plans.
+
+```sh
+wrangler secret put PRIVATE_KEY
+```
+
 ### Deploy the worker
+
 ```sh
  wrangler deploy
 ```
