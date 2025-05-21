@@ -9,7 +9,7 @@
 		"test": "vitest"
 	},
 	"dependencies": {
-		"@spur.us/monocle-backend": "^0.3.4"
+		"@spur.us/monocle-backend": "^0.5.0-canary.v20250521185758"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.27",
