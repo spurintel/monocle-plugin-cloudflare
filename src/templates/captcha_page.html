@@ -183,7 +183,7 @@
                 updateTheme();
             });
     </script>
-    <script src="https://mcl.spur.us/d/mcl.js?tk=PUBLISHABLE_KEY">
+    <script src="https://mcl.spur.dev/d/mcl.js?tk=PUBLISHABLE_KEY">
     </script>
     <script>
         // Function to handle the captcha data submission
@@ -209,7 +209,7 @@ function submitCaptchaData(data) {
           // For a 403 response, use the Denied page markup.
           if (response.status === 403) {
             document.title = "Monocle CAPTCHA Denied";
-            document.getElementById('connectionStatus').textContent = `Captcha validation failed. Please disconnect from ${basicText}`;
+            document.getElementById('connectionStatus').textContent = `Captcha validation failed. ${basicText}.`;
           } else {
             // For any other error status (like 400), use the Error page markup.
             document.title = "Monocle Error";

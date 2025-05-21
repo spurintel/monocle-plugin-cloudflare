@@ -56,23 +56,16 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 	}
 
 	try {
-		const monocle = await createMonocleClient({ secretKey: env.SECRET_KEY });
+		const monocle = await createMonocleClient({
+			secretKey: env.SECRET_KEY,
+			baseDomain: 'mcl.spur.dev',
+		});
 		const body = (await request.json()) as { captchaData: string };
 
-		const assessment = await monocle.decryptAssessment(body.captchaData, {
-			privateKeyPem,
-		});
+		const policyDecision = await monocle.evaluateAssessment(body.captchaData);
 
-		const responseTime = new Date(assessment.ts);
-		const currentTime = new Date();
-		const timeDifference = currentTime.getTime() - responseTime.getTime();
-		const timeDifferenceInSeconds = timeDifference / 1000;
-
-		if (
-			(timeDifferenceInSeconds > 5 || assessment.anon) &&
-			!EXEMPTED_SERVICES.includes(assessment.service)
-		) {
-			return new Response(assessment.service, { status: 403 });
+		if (!policyDecision.allowed) {
+			return new Response(policyDecision.reason, { status: 403 });
 		}
 
 		const headers = await setSecureCookie(request, env);
@@ -80,18 +73,16 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 	} catch (error: unknown) {
 		let errorMessage: string;
 
-		if (error instanceof MonocleDecryptionError) {
-			console.error(`Error verifying assessment with private key: ${error.message}`);
-		} else if (error instanceof MonocleAPIError) {
+		if (error instanceof MonocleAPIError) {
 			console.error(
-				`Error verifying assessment with https://decrypt.mcl.spur.us/api/v1/assessment: ${error.message}`
+				`Error evaluating assessment with https://decrypt.mcl.spur.us/api/v1/policy: ${error.message}`
 			);
 		} else if (error instanceof Error) {
-			console.error(`Error verifying assessment: ${error.message}`);
+			console.error(`Error evaluating assessment: ${error.message}`);
 		} else {
 			errorMessage = 'Unknown error occurred';
 		}
 
-		return new Response('Error verifying assessment', { status: 400 });
+		return new Response('Error evaluating assessment', { status: 400 });
 	}
 }
