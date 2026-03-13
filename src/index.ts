@@ -104,9 +104,19 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
  * Builds the block response based on worker env config.
  * Defaults to a plain 403 HTML page if no config is present.
  */
+/**
+ * Builds the block response based on worker env config.
+ * Sets X-Block-Action header so the captcha page JS can handle it correctly:
+ *   - "redirect:<url>" → captcha JS navigates window.location
+ *   - "html"          → captcha JS replaces the document with the HTML body
+ * Falls back to a plain 403 text response if no config is set.
+ */
 function buildBlockResponse(env: Env): Response {
 	if (env.BLOCK_RESPONSE_TYPE === 'redirect' && env.BLOCK_REDIRECT_URL) {
-		return Response.redirect(env.BLOCK_REDIRECT_URL, 302);
+		return new Response(null, {
+			status: 403,
+			headers: { 'X-Block-Action': `redirect:${env.BLOCK_REDIRECT_URL}` },
+		});
 	}
 
 	const statusCode = parseInt(env.BLOCK_STATUS_CODE ?? '403', 10);
@@ -135,6 +145,9 @@ function buildBlockResponse(env: Env): Response {
 
 	return new Response(html, {
 		status: statusCode,
-		headers: { 'Content-Type': 'text/html' },
+		headers: {
+			'Content-Type': 'text/html',
+			'X-Block-Action': 'html',
+		},
 	});
 }
