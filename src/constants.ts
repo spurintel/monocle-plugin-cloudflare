@@ -1,1 +1,3 @@
 export const COOKIE_NAME = 'MCLVALID';
+
+export const DEFAULT_EXEMPTED_SERVICES = ['WARP_VPN', 'ICLOUD_RELAY_PROXY'];

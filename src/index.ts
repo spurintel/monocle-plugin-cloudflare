@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from './constants';
+import { COOKIE_NAME, DEFAULT_EXEMPTED_SERVICES } from './constants';
 import { parseCookies, validateCookie, setSecureCookie } from './cookies';
 import captcha from './templates/captcha_page.html';
 import {
@@ -70,7 +70,7 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 
 		const exemptedServices: string[] = env.EXEMPTED_SERVICES
 			? (JSON.parse(env.EXEMPTED_SERVICES) as string[])
-			: [];
+			: DEFAULT_EXEMPTED_SERVICES;
 
 		if (
 			(timeDifferenceInSeconds > 5 || assessment.anon) &&
