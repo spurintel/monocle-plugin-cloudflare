@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"build": "esbuild src/index.ts --bundle --outfile=dist/worker.js --format=esm --target=esnext --platform=browser",
+		"build": "esbuild src/index.ts --bundle --outfile=dist/worker.js --format=esm --target=esnext --platform=browser --loader:.html=text",
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
