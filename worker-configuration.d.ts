@@ -7,6 +7,7 @@ declare namespace Cloudflare {
 		PUBLISHABLE_KEY: string;
 		PRIVATE_KEY?: string;
 		SECRET_KEY: string;
+		EXEMPTED_SERVICES?: string;
 	}
 }
 interface Env extends Cloudflare.Env {}

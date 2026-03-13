@@ -1,4 +1,4 @@
-import { COOKIE_NAME, EXEMPTED_SERVICES } from './constants';
+import { COOKIE_NAME } from './constants';
 import { parseCookies, validateCookie, setSecureCookie } from './cookies';
 import captcha from './templates/captcha_page.html';
 import {
@@ -68,9 +68,13 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 		const timeDifference = currentTime.getTime() - responseTime.getTime();
 		const timeDifferenceInSeconds = timeDifference / 1000;
 
+		const exemptedServices: string[] = env.EXEMPTED_SERVICES
+			? (JSON.parse(env.EXEMPTED_SERVICES) as string[])
+			: [];
+
 		if (
 			(timeDifferenceInSeconds > 5 || assessment.anon) &&
-			!EXEMPTED_SERVICES.includes(assessment.service)
+			!exemptedServices.includes(assessment.service)
 		) {
 			return new Response(assessment.service, { status: 403 });
 		}
