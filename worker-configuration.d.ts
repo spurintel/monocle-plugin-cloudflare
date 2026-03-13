@@ -8,6 +8,11 @@ declare namespace Cloudflare {
 		PRIVATE_KEY?: string;
 		SECRET_KEY: string;
 		EXEMPTED_SERVICES?: string;
+		BLOCK_RESPONSE_TYPE?: string;
+		BLOCK_STATUS_CODE?: string;
+		BLOCK_PAGE_TITLE?: string;
+		BLOCK_RESPONSE_BODY?: string;
+		BLOCK_REDIRECT_URL?: string;
 	}
 }
 interface Env extends Cloudflare.Env {}

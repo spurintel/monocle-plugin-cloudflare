@@ -76,7 +76,7 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 			(timeDifferenceInSeconds > 5 || assessment.anon) &&
 			!exemptedServices.includes(assessment.service)
 		) {
-			return new Response(assessment.service, { status: 403 });
+			return buildBlockResponse(env);
 		}
 
 		const headers = await setSecureCookie(request, env);
@@ -98,4 +98,43 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 
 		return new Response('Error verifying assessment', { status: 400 });
 	}
+}
+
+/**
+ * Builds the block response based on worker env config.
+ * Defaults to a plain 403 HTML page if no config is present.
+ */
+function buildBlockResponse(env: Env): Response {
+	if (env.BLOCK_RESPONSE_TYPE === 'redirect' && env.BLOCK_REDIRECT_URL) {
+		return Response.redirect(env.BLOCK_REDIRECT_URL, 302);
+	}
+
+	const statusCode = parseInt(env.BLOCK_STATUS_CODE ?? '403', 10);
+	const title = env.BLOCK_PAGE_TITLE ?? 'Access Denied';
+	const body = env.BLOCK_RESPONSE_BODY ?? 'This request has been blocked.';
+
+	const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <style>
+    body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#0a0a0a;color:#fff}
+    .container{text-align:center;max-width:500px;padding:2rem}
+    h1{font-size:1.5rem;font-weight:300;margin-bottom:1rem}
+    p{color:#9ca3af}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>${title}</h1>
+    <p>${body}</p>
+  </div>
+</body>
+</html>`;
+
+	return new Response(html, {
+		status: statusCode,
+		headers: { 'Content-Type': 'text/html' },
+	});
 }
