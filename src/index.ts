@@ -73,6 +73,7 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 			: DEFAULT_EXEMPTED_SERVICES;
 
 		if (
+			env.MODE !== 'MONITOR' &&
 			(timeDifferenceInSeconds > 5 || assessment.anon) &&
 			!exemptedServices.includes(assessment.service)
 		) {
@@ -129,10 +130,10 @@ function buildBlockResponse(env: Env): Response {
   <meta charset="utf-8">
   <title>${title}</title>
   <style>
-    body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#0a0a0a;color:#fff}
+    body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#fff;color:#111}
     .container{text-align:center;max-width:500px;padding:2rem}
     h1{font-size:1.5rem;font-weight:300;margin-bottom:1rem}
-    p{color:#9ca3af}
+    p{color:#6b7280}
   </style>
 </head>
 <body>
