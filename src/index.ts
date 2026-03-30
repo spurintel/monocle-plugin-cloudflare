@@ -64,8 +64,8 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 
 		const policyDecision = await monocle.evaluateAssessment(body.captchaData);
 
-		if (!policyDecision.allowed) {
-			return new Response(policyDecision.reason, { status: 403 });
+		if (!policyDecision.allowed && env.MODE !== 'MONITOR') {
+			return buildBlockResponse(env);
 		}
 
 		const headers = await setSecureCookie(request, env);
