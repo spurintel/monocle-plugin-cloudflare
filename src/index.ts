@@ -58,7 +58,7 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 	try {
 		const monocle = await createMonocleClient({
 			secretKey: env.SECRET_KEY,
-			baseDomain: 'mcl.spur.dev',
+			baseDomain: 'mcl.spur.us',
 		});
 		const body = (await request.json()) as { captchaData: string };
 
