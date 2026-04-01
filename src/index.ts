@@ -44,20 +44,13 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 async function validateCaptchaHandler(request: Request, env: Env): Promise<Response> {
-	if (env.CLOUDFLARE_NO_CODE === 'true') {
-		return validateWithPolicyApi(request, env, true);
-	}
-	if (env.USE_POLICY_API === 'true') {
-		return validateWithPolicyApi(request, env, false);
+	if (env.CLOUDFLARE_NO_CODE === 'true' || env.USE_POLICY_API === 'true') {
+		return validateWithPolicyApi(request, env);
 	}
 	return validateWithDecrypt(request, env);
 }
 
-async function validateWithPolicyApi(
-	request: Request,
-	env: Env,
-	useConfiguredBlockResponse: boolean
-): Promise<Response> {
+async function validateWithPolicyApi(request: Request, env: Env): Promise<Response> {
 	try {
 		const monocle = await createMonocleClient({
 			secretKey: env.SECRET_KEY,
@@ -66,9 +59,10 @@ async function validateWithPolicyApi(
 		const body = (await request.json()) as { captchaData: string };
 
 		const policyDecision = await monocle.evaluateAssessment(body.captchaData);
+		const isMonitorMode = env.MODE === 'MONITOR';
 
-		if (!policyDecision.allowed && env.MODE !== 'MONITOR') {
-			return useConfiguredBlockResponse
+		if (!policyDecision.allowed && !isMonitorMode) {
+			return env.CLOUDFLARE_NO_CODE === 'true'
 				? buildBlockResponse(env)
 				: new Response('Blocked', { status: 403 });
 		}
