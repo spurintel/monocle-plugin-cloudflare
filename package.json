@@ -3,7 +3,6 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"build": "esbuild src/index.ts --bundle --outfile=dist/worker.js --format=esm --target=esnext --platform=browser --loader:.html=text",
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
@@ -15,7 +14,6 @@
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.8.27",
 		"@types/node": "^22.15.15",
-		"esbuild": "^0.25.0",
 		"vitest": "~3.1.0",
 		"wrangler": "^4.14.3"
 	}

@@ -192,51 +192,33 @@
 function submitCaptchaData(data) {
   fetch('/validate_captcha', {
     method: 'POST',
-    redirect: 'manual',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ captchaData: data }),
   })
     .then(response => {
       if (response.ok) {
         window.location.href = 'REPLACE_REDIRECT'; // On success, redirect as before.
-        return;
-      }
-
-      // Check for a configured block action from the worker.
-      const blockAction = response.headers.get('X-Block-Action');
-
-      if (blockAction && blockAction.startsWith('redirect:')) {
-        // Redirect type — navigate to the configured URL.
-        window.location.href = blockAction.slice('redirect:'.length);
-        return;
-      }
-
-      if (blockAction === 'html') {
-        // HTML block page — replace the entire document with the configured page.
-        response.text().then((html) => {
-          document.open();
-          document.write(html);
-          document.close();
+      } else {
+        connectionStatus.className = 'loading-no-animation';
+        response.text().then((message) => {
+          // Use provided error message or fallback to default text.
+          let basicText = message && message.trim() !== "" 
+            ? message 
+            : "any VPNs or proxies and try again";
+          
+          // For a 403 response, use the Denied page markup.
+          if (response.status === 403) {
+            document.title = "Monocle CAPTCHA Denied";
+            document.getElementById('connectionStatus').textContent = `Captcha validation failed. Please disconnect from ${basicText}`;
+          } else {
+            // For any other error status (like 400), use the Error page markup.
+            document.title = "Monocle Error";
+            document.getElementById('connectionStatus').textContent = basicText;
+          }
+          // Reapply theme in case the new content needs adjustment.
+          updateTheme();
         });
-        return;
       }
-
-      // Default fallback — show inline error.
-      connectionStatus.className = 'loading-no-animation';
-      response.text().then((message) => {
-        let basicText = message && message.trim() !== ""
-          ? message
-          : "any VPNs or proxies and try again";
-
-        if (response.status === 403) {
-          document.title = "Monocle CAPTCHA Denied";
-          document.getElementById('connectionStatus').textContent = `Captcha validation failed. Please disconnect from ${basicText}`;
-        } else {
-          document.title = "Monocle Error";
-          document.getElementById('connectionStatus').textContent = basicText;
-        }
-        updateTheme();
-      });
     })
     .catch(error => {
       console.error('Error during captcha validation:', error);
