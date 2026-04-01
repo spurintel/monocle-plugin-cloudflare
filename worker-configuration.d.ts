@@ -8,6 +8,8 @@ declare namespace Cloudflare {
 		PRIVATE_KEY?: string;
 		SECRET_KEY: string;
 		EXEMPTED_SERVICES?: string;
+		CLOUDFLARE_NO_CODE?: string;
+		USE_POLICY_API?: string;
 		MODE?: string;
 		BLOCK_RESPONSE_TYPE?: string;
 		BLOCK_STATUS_CODE?: string;

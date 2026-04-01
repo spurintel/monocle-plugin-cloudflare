@@ -43,18 +43,21 @@ export default {
 	},
 } satisfies ExportedHandler<Env>;
 
-/**
- * Handles captcha validation requests.
- * @param {Request} request - The incoming request containing captcha data
- * @param {Env} env - Worker environment variables
- * @returns {Promise<Response>} Response indicating validation success or failure
- */
 async function validateCaptchaHandler(request: Request, env: Env): Promise<Response> {
-	let privateKeyPem: string | undefined;
-	if (env.PRIVATE_KEY && env.PRIVATE_KEY.length > 0) {
-		privateKeyPem = env.PRIVATE_KEY;
+	if (env.CLOUDFLARE_NO_CODE === 'true') {
+		return validateWithPolicyApi(request, env, true);
 	}
+	if (env.USE_POLICY_API === 'true') {
+		return validateWithPolicyApi(request, env, false);
+	}
+	return validateWithDecrypt(request, env);
+}
 
+async function validateWithPolicyApi(
+	request: Request,
+	env: Env,
+	useConfiguredBlockResponse: boolean
+): Promise<Response> {
 	try {
 		const monocle = await createMonocleClient({
 			secretKey: env.SECRET_KEY,
@@ -65,38 +68,72 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 		const policyDecision = await monocle.evaluateAssessment(body.captchaData);
 
 		if (!policyDecision.allowed && env.MODE !== 'MONITOR') {
-			return buildBlockResponse(env);
+			return useConfiguredBlockResponse
+				? buildBlockResponse(env)
+				: new Response('Blocked', { status: 403 });
 		}
 
 		const headers = await setSecureCookie(request, env);
 		return new Response('Captcha validated successfully', { status: 200, headers: headers });
 	} catch (error: unknown) {
-		let errorMessage: string;
-
 		if (error instanceof MonocleAPIError) {
 			console.error(
 				`Error evaluating assessment with https://decrypt.mcl.spur.us/api/v1/policy: ${error.message}`
 			);
 		} else if (error instanceof Error) {
 			console.error(`Error evaluating assessment: ${error.message}`);
-		} else {
-			errorMessage = 'Unknown error occurred';
 		}
-
 		return new Response('Error evaluating assessment', { status: 400 });
 	}
 }
 
-/**
- * Builds the block response based on worker env config.
- * Defaults to a plain 403 HTML page if no config is present.
- */
+async function validateWithDecrypt(request: Request, env: Env): Promise<Response> {
+	const privateKeyPem = env.PRIVATE_KEY?.length ? env.PRIVATE_KEY : undefined;
+
+	try {
+		const monocle = await createMonocleClient({ secretKey: env.SECRET_KEY });
+		const body = (await request.json()) as { captchaData: string };
+
+		const assessment = await monocle.decryptAssessment(body.captchaData, { privateKeyPem });
+
+		const responseTime = new Date(assessment.ts);
+		const currentTime = new Date();
+		const timeDifferenceInSeconds = (currentTime.getTime() - responseTime.getTime()) / 1000;
+
+		const exemptedServices = env.EXEMPTED_SERVICES
+			? (JSON.parse(env.EXEMPTED_SERVICES) as string[])
+			: DEFAULT_EXEMPTED_SERVICES;
+
+		if (
+			(timeDifferenceInSeconds > 5 || assessment.anon) &&
+			!exemptedServices.includes(assessment.service)
+		) {
+			return new Response(assessment.service, { status: 403 });
+		}
+
+		const headers = await setSecureCookie(request, env);
+		return new Response('Captcha validated successfully', { status: 200, headers: headers });
+	} catch (error: unknown) {
+		if (error instanceof MonocleDecryptionError) {
+			console.error(`Error verifying assessment with private key: ${error.message}`);
+		} else if (error instanceof MonocleAPIError) {
+			console.error(
+				`Error verifying assessment with https://decrypt.mcl.spur.us/api/v1/assessment: ${error.message}`
+			);
+		} else if (error instanceof Error) {
+			console.error(`Error verifying assessment: ${error.message}`);
+		}
+		return new Response('Error verifying assessment', { status: 400 });
+	}
+}
+
 /**
  * Builds the block response based on worker env config.
  * Sets X-Block-Action header so the captcha page JS can handle it correctly:
  *   - "redirect:<url>" → captcha JS navigates window.location
  *   - "html"          → captcha JS replaces the document with the HTML body
  * Falls back to a plain 403 text response if no config is set.
+ * Only used when CLOUDFLARE_NO_CODE=true.
  */
 function buildBlockResponse(env: Env): Response {
 	if (env.BLOCK_RESPONSE_TYPE === 'redirect' && env.BLOCK_REDIRECT_URL) {
