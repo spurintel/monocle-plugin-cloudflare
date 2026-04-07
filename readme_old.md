@@ -1,6 +1,6 @@
 # Monocle by Spur
 
-Easily deploy a Cloudflare Worker with Monocle that will automatically protect your site from residential proxies, malware proxies, or other commercial anonymity services.
+Easily deploy a CloudFlare service worker with Monocle that will automatically protect your site from residential proxies, malware proxies, or other commercial anonymity services.
 
 ## Description
 
@@ -12,36 +12,19 @@ Monocle can detect a user session coming from a residential proxy, malware proxy
 [Demo](https://spur.us/demo)
 [Blog](https://spur.us/blog)
 
-This Cloudflare Worker will automatically force a Monocle assessment on new users before allowing them access to your site. Authentic users will not be negatively impacted. The cookie this plugin sets is valid for one hour or until the user changes IP address.
+This CloudFlare service worker will automatically force a Monocle render on new users before allowing them access to your site. Authentic users will not be negatively impacted. The cookie that this plugin sets for the user is good for an hour or whenever the user changes IP addresses.
 
 ## Help and Support
 
 support@spur.us
 
----
-
-## Deployment Options
-
-### Option 1 — No-Code Deploy (Recommended)
-
-Deploy and manage the worker directly from the [Monocle Cloudflare admin page](https://app.spur.us/monocle/onboard) without any manual configuration. The admin page handles all secrets, routing, and policy configuration automatically.
-
-**Features available via the dashboard:**
-- Monitor Mode — passively assess all traffic with no blocking
-- Enforcement Mode — block traffic based on your Monocle Policy
-- Configurable block responses (custom messaging or redirect URL)
-
-### Option 2 — Manual Deploy
-
-Deploy and manage the worker yourself using Wrangler.
-
-#### Terraform
+## Terraform
 
 Use our official [Terraform module](https://registry.terraform.io/modules/spurintel/worker-spur-monocle/cloudflare/latest) to quickly integrate the Monocle Cloudflare worker into your Terraform-enabled project.
 
-#### Wrangler Setup
+## Wrangler Setup
 
-**Install Wrangler CLI**
+### Install Wrangler CLI
 
 Wrangler is the Cloudflare CLI tool that allows you to manage your Cloudflare Workers.
 In order to install the Monocle worker make sure you have `wrangler` installed globally.
@@ -56,7 +39,7 @@ Make sure you are logged in to your Cloudflare account with Wrangler.
 wrangler login
 ```
 
-**Fork this repository**
+### Fork this repository
 
 In order to deploy this worker, you will need to fork this repository to your own GitHub account.
 This will allow you to make changes to the worker and deploy it to your own Cloudflare account.
@@ -72,7 +55,7 @@ cd monocle-plugin-cloudflare
 npm install # Install dependencies
 ```
 
-**Configure the worker**
+### Configure the worker
 
 You will need to create a `wrangler.toml` file and set your `account_id` and `route`.
 
@@ -95,7 +78,7 @@ workers_dev = false # Set to false to deploy to custom domain
 route = { pattern = "${YOUR_ROUTE}", zone_id = "${YOUR_ZONE}" }
 ```
 
-**Set up your secrets**
+### Set up your secrets
 
 ```sh
 wrangler secret put PUBLISHABLE_KEY
@@ -110,36 +93,8 @@ To use manual decryption set the `PRIVATE_KEY` secret. This is feature is only a
 wrangler secret put PRIVATE_KEY
 ```
 
-**Opt in to the Policy API**
-
-If you want to use Spur's Policy API for assessment decisions instead of the default local decryption path, set the following secret:
+### Deploy the worker
 
 ```sh
-wrangler secret put USE_POLICY_API   # set value to: true
+ wrangler deploy
 ```
-
-When `USE_POLICY_API=true`:
-- The worker calls Spur's Policy API to evaluate each session
-- If you have the relevant Policy blocking entitlements and a policy is configured, traffic that fails the policy check will be blocked with a `403` response
-- If no policy is configured or the account does not have blocking entitlements, traffic is allowed through automatically
-
-**Deploy the worker**
-
-```sh
-wrangler deploy
-```
-
----
-
-## Environment Variables Reference
-
-| Variable | Required | Description |
-|---|---|---|
-| `PUBLISHABLE_KEY` | Yes | Your Monocle publishable key |
-| `SECRET_KEY` | Yes | Your Monocle secret key |
-| `COOKIE_SECRET_VALUE` | Yes | 32-byte hex string for cookie signing |
-| `PRIVATE_KEY` | No | PEM private key for local decryption (Enterprise only) |
-| `USE_POLICY_API` | No | Set to `true` to use the Policy API instead of local decryption |
-| `EXEMPTED_SERVICES` | No | JSON array of service names to exempt from blocking (default: `["WARP_VPN","ICLOUD_RELAY_PROXY"]`) |
-| `CLOUDFLARE_NO_CODE` | No | Set automatically by the Spur dashboard — do not set manually |
-| `MODE` | No | Set automatically by the Spur dashboard (`MONITOR` or `BLOCKING`) — do not set manually |
