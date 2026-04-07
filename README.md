@@ -6,10 +6,10 @@ Easily deploy a CloudFlare service worker with Monocle that will automatically p
 
 Monocle can detect a user session coming from a residential proxy, malware proxy, or other endpoint based proxy network. By detecting this at the session level, you can take action on abusive users without impacting legitimate ones.
 
-[Monocle](https://spur.us/monocle)
+[Monocle](https://spur.us/platform/session-enrichment)
 [Docs](https://docs.spur.us/#/monocle)
-[FAQ](https://spur.us/monocle/#faqs)
-[Demo](https://spur.us/app/demos/monocle/form)
+[FAQ](https://spur.us/platform/session-enrichment)
+[Demo](https://spur.us/demo)
 [Blog](https://spur.us/announcing-monocle-community-edition)
 
 This CloudFlare service worker will automatically force a Monocle render on new users before allowing them access to your site. Authentic users will not be negatively impacted. The cookie that this plugin sets for the user is good for an hour or whenever the user changes IP addresses.
