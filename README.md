@@ -10,7 +10,7 @@ Monocle can detect a user session coming from a residential proxy, malware proxy
 [Docs](https://docs.spur.us/#/monocle)
 [FAQ](https://spur.us/platform/session-enrichment)
 [Demo](https://spur.us/demo)
-[Blog](https://spur.us/announcing-monocle-community-edition)
+[Blog](https://spur.us/blog)
 
 This CloudFlare service worker will automatically force a Monocle render on new users before allowing them access to your site. Authentic users will not be negatively impacted. The cookie that this plugin sets for the user is good for an hour or whenever the user changes IP addresses.
 
