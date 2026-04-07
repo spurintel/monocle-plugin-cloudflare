@@ -195,22 +195,20 @@ function submitCaptchaData(data) {
         return;
       }
 
-      // Default fallback — show inline error.
-      connectionStatus.className = 'loading-no-animation';
-      response.text().then((message) => {
-        let basicText = message && message.trim() !== ""
-          ? message
-          : "any VPNs or proxies and try again";
-
-        if (response.status === 403) {
-          document.title = "Monocle CAPTCHA Denied";
+      // Deliberate block (403) — show denial message using response body.
+      if (response.status === 403) {
+        connectionStatus.className = 'loading-no-animation';
+        document.title = "Monocle CAPTCHA Denied";
+        response.text().then((message) => {
+          const basicText = message && message.trim() !== "" ? message : "any VPNs or proxies and try again";
           document.getElementById('connectionStatus').textContent = `Captcha validation failed. ${basicText}.`;
-        } else {
-          document.title = "Monocle Error";
-          document.getElementById('connectionStatus').textContent = basicText;
-        }
-        updateTheme();
-      });
+          updateTheme();
+        });
+        return;
+      }
+
+      // Any other error — fail open and allow traffic through.
+      window.location.href = 'REPLACE_REDIRECT';
     })
     .catch(error => {
       console.error('Error during captcha validation:', error);

@@ -44,8 +44,12 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 async function validateCaptchaHandler(request: Request, env: Env): Promise<Response> {
-	if (env.CLOUDFLARE_NO_CODE === 'true' || env.USE_POLICY_API === 'true') {
+	if (env.USE_POLICY_API === 'true') {
 		return validateWithPolicyApi(request, env);
+	}
+	if (env.CLOUDFLARE_NO_CODE === 'true') {
+		// Monitor mode — assess but never block, always allow through.
+		return validateWithDecryptMonitor(request, env);
 	}
 	return validateWithDecrypt(request, env);
 }
@@ -59,9 +63,8 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 		const body = (await request.json()) as { captchaData: string };
 
 		const policyDecision = await monocle.evaluateAssessment(body.captchaData);
-		const isMonitorMode = env.CLOUDFLARE_NO_CODE === 'true' && env.MODE === 'MONITOR';
 
-		if (!policyDecision.allowed && !isMonitorMode) {
+		if (!policyDecision.allowed) {
 			return env.CLOUDFLARE_NO_CODE === 'true'
 				? buildBlockResponse(env)
 				: new Response('Blocked', { status: 403 });
@@ -70,18 +73,14 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 		const headers = await setSecureCookie(request, env);
 		return new Response('Captcha validated successfully', { status: 200, headers: headers });
 	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		if (error instanceof MonocleAPIError) {
-			const statusMatch = /status (\d+)/.exec(error.message);
-			const status = statusMatch ? parseInt(statusMatch[1], 10) : null;
-			if (status !== null && status >= 400 && status < 500) {
-				console.warn(`Policy API returned ${status}, allowing traffic through: ${error.message}`);
-				const headers = await setSecureCookie(request, env);
-				return new Response('Captcha validated successfully', { status: 200, headers });
+			const status = parseInt(/status (\d+)/.exec(message)?.[1] ?? '', 10);
+			if (status !== 404) {
+				console.error(`Policy API error: ${message}`);
 			}
-			console.error(`Policy API server error: ${error.message}`);
 		} else {
-			const message = error instanceof Error ? error.message : String(error);
-			console.error(`Policy API network error: ${message}`);
+			console.error(`Policy API error: ${message}`);
 		}
 		return new Response('Error evaluating assessment', { status: 400 });
 	}
@@ -125,6 +124,21 @@ async function validateWithDecrypt(request: Request, env: Env): Promise<Response
 		}
 		return new Response('Error verifying assessment', { status: 400 });
 	}
+}
+
+async function validateWithDecryptMonitor(request: Request, env: Env): Promise<Response> {
+	const privateKeyPem = env.PRIVATE_KEY?.length ? env.PRIVATE_KEY : undefined;
+	try {
+		const monocle = await createMonocleClient({ secretKey: env.SECRET_KEY });
+		const body = (await request.json()) as { captchaData: string };
+		await monocle.decryptAssessment(body.captchaData, { privateKeyPem });
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		console.error(`Monitor mode assessment error: ${message}`);
+	}
+	// Always allow through regardless of assessment result.
+	const headers = await setSecureCookie(request, env);
+	return new Response('Captcha validated successfully', { status: 200, headers });
 }
 
 /**

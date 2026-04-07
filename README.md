@@ -142,4 +142,3 @@ wrangler deploy
 | `USE_POLICY_API` | No | Set to `true` to use the Policy API instead of local decryption |
 | `EXEMPTED_SERVICES` | No | JSON array of service names to exempt from blocking (default: `["WARP_VPN","ICLOUD_RELAY_PROXY"]`) |
 | `CLOUDFLARE_NO_CODE` | No | Set automatically by the Spur dashboard — do not set manually |
-| `MODE` | No | Set automatically by the Spur dashboard (`MONITOR` or `BLOCKING`) — do not set manually |
