@@ -74,15 +74,12 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 			const statusMatch = /status (\d+)/.exec(error.message);
 			const status = statusMatch ? parseInt(statusMatch[1], 10) : null;
 			if (status !== null && status >= 400 && status < 500) {
-				// 4xx — likely no entitlement or no policy configured, fail open
 				console.warn(`Policy API returned ${status}, allowing traffic through: ${error.message}`);
 				const headers = await setSecureCookie(request, env);
 				return new Response('Captcha validated successfully', { status: 200, headers });
 			}
-			// 5xx — server error
 			console.error(`Policy API server error: ${error.message}`);
 		} else {
-			// Network/fetch error
 			const message = error instanceof Error ? error.message : String(error);
 			console.error(`Policy API network error: ${message}`);
 		}
