@@ -24,7 +24,7 @@ support@spur.us
 
 ### Option 1 — No-Code Deploy (Recommended)
 
-Deploy and manage the worker directly from the [Spur dashboard](https://spur.us/demo) without any manual configuration. The dashboard handles all secrets, routing, and policy configuration automatically.
+Deploy and manage the worker directly from the [Monocle Cloudflare admin page](https://app.spur.us/monocle/onboard) without any manual configuration. The admin page handles all secrets, routing, and policy configuration automatically.
 
 **Features available via the dashboard:**
 - Monitor Mode — passively assess all traffic with no blocking
