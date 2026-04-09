@@ -72,9 +72,12 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 		const message = error instanceof Error ? error.message : String(error);
 		if (error instanceof MonocleAPIError) {
 			const status = parseInt(/status (\d+)/.exec(message)?.[1] ?? '', 10);
-			if (status !== 404) {
-				console.error(`Policy API error: ${message}`);
+			if (status === 404) {
+				// No policy configured — fail open and allow through
+				const headers = await setSecureCookie(request, env);
+				return new Response('Captcha validated successfully', { status: 200, headers });
 			}
+			console.error(`Policy API error: ${message}`);
 		} else {
 			console.error(`Policy API error: ${message}`);
 		}
