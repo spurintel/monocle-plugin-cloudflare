@@ -102,6 +102,7 @@ wrangler secret put PRIVATE_KEY
 If you want to use Spur's Policy API for assessment decisions instead of the default local decryption path, set the following secret:
 
 ```sh
+# Set to true to use the Monocle policy API instead of local assessment decryption.
 wrangler secret put USE_POLICY_API   # set value to: true
 ```
 
