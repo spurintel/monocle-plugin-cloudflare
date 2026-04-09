@@ -4,5 +4,4 @@ PRIVATE_KEY=test_private_key
 SECRET_KEY=test_secret_key
 
 # Set to true to use the Monocle policy API instead of local assessment decryption.
-# Required if you have configured policies in the Spur dashboard.
 # USE_POLICY_API=false
