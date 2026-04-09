@@ -47,10 +47,6 @@ async function validateCaptchaHandler(request: Request, env: Env): Promise<Respo
 	if (env.USE_POLICY_API === 'true') {
 		return validateWithPolicyApi(request, env);
 	}
-	if (env.CLOUDFLARE_NO_CODE === 'true') {
-		// Monitor mode — assess but never block, always allow through.
-		return validateWithDecryptMonitor(request, env);
-	}
 	return validateWithDecrypt(request, env);
 }
 
@@ -65,7 +61,7 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 		const policyDecision = await monocle.evaluateAssessment(body.captchaData);
 
 		if (!policyDecision.allowed) {
-			return env.CLOUDFLARE_NO_CODE === 'true'
+			return env.BLOCK_RESPONSE_TYPE
 				? buildBlockResponse(env)
 				: new Response('Blocked', { status: 403 });
 		}
@@ -126,28 +122,12 @@ async function validateWithDecrypt(request: Request, env: Env): Promise<Response
 	}
 }
 
-async function validateWithDecryptMonitor(request: Request, env: Env): Promise<Response> {
-	const privateKeyPem = env.PRIVATE_KEY?.length ? env.PRIVATE_KEY : undefined;
-	try {
-		const monocle = await createMonocleClient({ secretKey: env.SECRET_KEY });
-		const body = (await request.json()) as { captchaData: string };
-		await monocle.decryptAssessment(body.captchaData, { privateKeyPem });
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error(`Monitor mode assessment error: ${message}`);
-	}
-	// Always allow through regardless of assessment result.
-	const headers = await setSecureCookie(request, env);
-	return new Response('Captcha validated successfully', { status: 200, headers });
-}
-
 /**
  * Builds the block response based on worker env config.
  * Sets X-Block-Action header so the captcha page JS can handle it correctly:
  *   - "redirect:<url>" → captcha JS navigates window.location
  *   - "html"          → captcha JS replaces the document with the HTML body
- * Falls back to a plain 403 text response if no config is set.
- * Only used when CLOUDFLARE_NO_CODE=true.
+ * Falls back to a plain 403 if BLOCK_RESPONSE_TYPE is not set.
  */
 function buildBlockResponse(env: Env): Response {
 	if (env.BLOCK_RESPONSE_TYPE === 'redirect' && env.BLOCK_REDIRECT_URL) {
