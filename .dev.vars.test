@@ -2,3 +2,6 @@ COOKIE_SECRET_VALUE=0123456789abcdef0123456789abcdef0123456789abcdef0123456789ab
 PUBLISHABLE_KEY=test_publishable_key
 PRIVATE_KEY=test_private_key
 SECRET_KEY=test_secret_key
+
+# Set to true to use the Monocle policy API instead of local assessment decryption.
+# USE_POLICY_API=false

@@ -1,30 +1,34 @@
 # Monocle by Spur
 
-Easily deploy a CloudFlare service worker with Monocle that will automatically protect your site from residential proxies, malware proxies, or other commercial anonymity services.
+Easily deploy a Cloudflare Worker with Monocle that will automatically protect your site from residential proxies, malware proxies, or other commercial anonymity services.
 
 ## Description
 
 Monocle can detect a user session coming from a residential proxy, malware proxy, or other endpoint based proxy network. By detecting this at the session level, you can take action on abusive users without impacting legitimate ones.
 
-[Monocle](https://spur.us/monocle)
+[Monocle](https://spur.us/platform/session-enrichment)
 [Docs](https://docs.spur.us/#/monocle)
-[FAQ](https://spur.us/monocle/#faqs)
-[Demo](https://spur.us/app/demos/monocle/form)
-[Blog](https://spur.us/announcing-monocle-community-edition)
+[FAQ](https://spur.us/platform/session-enrichment)
+[Demo](https://spur.us/demo)
+[Blog](https://spur.us/blog)
 
-This CloudFlare service worker will automatically force a Monocle render on new users before allowing them access to your site. Authentic users will not be negatively impacted. The cookie that this plugin sets for the user is good for an hour or whenever the user changes IP addresses.
+This Cloudflare Worker will automatically force a Monocle assessment on new users before allowing them access to your site. Authentic users will not be negatively impacted. The cookie this plugin sets is valid for one hour or until the user changes IP address.
 
 ## Help and Support
 
 support@spur.us
 
-## Terraform
+---
+
+## Deployment
+
+### Terraform
 
 Use our official [Terraform module](https://registry.terraform.io/modules/spurintel/worker-spur-monocle/cloudflare/latest) to quickly integrate the Monocle Cloudflare worker into your Terraform-enabled project.
 
-## Wrangler Setup
+### Wrangler Setup
 
-### Install Wrangler CLI
+**Install Wrangler CLI**
 
 Wrangler is the Cloudflare CLI tool that allows you to manage your Cloudflare Workers.
 In order to install the Monocle worker make sure you have `wrangler` installed globally.
@@ -39,7 +43,7 @@ Make sure you are logged in to your Cloudflare account with Wrangler.
 wrangler login
 ```
 
-### Fork this repository
+**Fork this repository**
 
 In order to deploy this worker, you will need to fork this repository to your own GitHub account.
 This will allow you to make changes to the worker and deploy it to your own Cloudflare account.
@@ -55,7 +59,7 @@ cd monocle-plugin-cloudflare
 npm install # Install dependencies
 ```
 
-### Configure the worker
+**Configure the worker**
 
 You will need to create a `wrangler.toml` file and set your `account_id` and `route`.
 
@@ -78,7 +82,7 @@ workers_dev = false # Set to false to deploy to custom domain
 route = { pattern = "${YOUR_ROUTE}", zone_id = "${YOUR_ZONE}" }
 ```
 
-### Set up your secrets
+**Set up your secrets**
 
 ```sh
 wrangler secret put PUBLISHABLE_KEY
@@ -93,8 +97,62 @@ To use manual decryption set the `PRIVATE_KEY` secret. This is feature is only a
 wrangler secret put PRIVATE_KEY
 ```
 
-### Deploy the worker
+**Opt in to the Policy API**
+
+If you want to use Spur's Policy API for assessment decisions instead of the default local decryption path, set the following secret:
 
 ```sh
- wrangler deploy
+# Set to true to use the Monocle policy API instead of local assessment decryption.
+wrangler secret put USE_POLICY_API   # set value to: true
 ```
+
+When `USE_POLICY_API=true`:
+- The worker calls Spur's Policy API to evaluate each session
+- If you have the relevant Policy blocking entitlements and a policy is configured, traffic that fails the policy check will be blocked
+- If no policy is configured or the account does not have blocking entitlements, traffic is allowed through automatically
+
+Optionally configure a custom response for blocked requests:
+
+```sh
+wrangler secret put BLOCK_RESPONSE_TYPE   # html or redirect
+```
+
+For `html` — customise the block page:
+
+```sh
+wrangler secret put BLOCK_STATUS_CODE     # e.g. 403
+wrangler secret put BLOCK_PAGE_TITLE      # browser tab title
+wrangler secret put BLOCK_RESPONSE_BODY   # message text shown on the block page
+```
+
+For `redirect` — send blocked users elsewhere:
+
+```sh
+wrangler secret put BLOCK_REDIRECT_URL    # URL to redirect to
+```
+
+If `BLOCK_RESPONSE_TYPE` is not set, blocked requests receive a plain `403` response.
+
+**Deploy the worker**
+
+```sh
+wrangler deploy
+```
+
+---
+
+## Environment Variables Reference
+
+| Variable | Required | Description |
+|---|---|---|
+| `PUBLISHABLE_KEY` | Yes | Your Monocle publishable key |
+| `SECRET_KEY` | Yes | Your Monocle secret key |
+| `COOKIE_SECRET_VALUE` | Yes | 32-byte hex string for cookie signing |
+| `PRIVATE_KEY` | No | PEM private key for local decryption (Enterprise only) |
+| `USE_POLICY_API` | No | Set to `true` to use the Policy API instead of local decryption |
+| `EXEMPTED_SERVICES` | No | JSON array of service names to exempt from blocking (default: `["WARP_VPN","ICLOUD_RELAY_PROXY"]`) |
+| `BLOCK_RESPONSE_TYPE` | No | `html` or `redirect` — customises the response for blocked requests |
+| `BLOCK_STATUS_CODE` | No | HTTP status code for HTML block responses (default: `403`) |
+| `BLOCK_PAGE_TITLE` | No | Browser tab title for HTML block responses |
+| `BLOCK_RESPONSE_BODY` | No | Message text shown on the block page |
+| `BLOCK_REDIRECT_URL` | No | URL to redirect blocked users to (required when `BLOCK_RESPONSE_TYPE=redirect`) |
