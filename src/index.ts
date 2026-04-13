@@ -4,6 +4,7 @@ import captcha from './templates/captcha_page.html';
 import {
 	createMonocleClient,
 	MonocleAPIError,
+	MonocleDecryptionError,
 } from '@spur.us/monocle-backend';
 
 /**
@@ -68,9 +69,11 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 		const headers = await setSecureCookie(request, env);
 		return new Response('Captcha validated successfully', { status: 200, headers: headers });
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error(`Policy API error — failing open: ${message}`);
-		// Any error from the policy API means we have no explicit block decision — fail open.
+		if (error instanceof MonocleAPIError) {
+			console.error(`Policy API error — failing open: ${error.message}`);
+		} else if (error instanceof Error) {
+			console.error(`Unexpected error evaluating assessment — failing open: ${error.message}`);
+		}
 		const headers = await setSecureCookie(request, env);
 		return new Response('Captcha validated successfully', { status: 200, headers });
 	}
@@ -103,8 +106,13 @@ async function validateWithDecrypt(request: Request, env: Env): Promise<Response
 		const headers = await setSecureCookie(request, env);
 		return new Response('Captcha validated successfully', { status: 200, headers: headers });
 	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error(`Error verifying assessment — failing open: ${message}`);
+		if (error instanceof MonocleDecryptionError) {
+			console.error(`Error verifying assessment with private key — failing open: ${error.message}`);
+		} else if (error instanceof MonocleAPIError) {
+			console.error(`Error verifying assessment with decrypt API — failing open: ${error.message}`);
+		} else if (error instanceof Error) {
+			console.error(`Unexpected error verifying assessment — failing open: ${error.message}`);
+		}
 		const headers = await setSecureCookie(request, env);
 		return new Response('Captcha validated successfully', { status: 200, headers });
 	}
