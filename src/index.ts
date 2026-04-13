@@ -4,7 +4,6 @@ import captcha from './templates/captcha_page.html';
 import {
 	createMonocleClient,
 	MonocleAPIError,
-	MonocleDecryptionError,
 } from '@spur.us/monocle-backend';
 
 /**
@@ -70,18 +69,10 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 		return new Response('Captcha validated successfully', { status: 200, headers: headers });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		if (error instanceof MonocleAPIError) {
-			const status = parseInt(/status (\d+)/.exec(message)?.[1] ?? '', 10);
-			if (status === 404) {
-				// No policy configured — fail open and allow through
-				const headers = await setSecureCookie(request, env);
-				return new Response('Captcha validated successfully', { status: 200, headers });
-			}
-			console.error(`Policy API error: ${message}`);
-		} else {
-			console.error(`Policy API error: ${message}`);
-		}
-		return new Response('Error evaluating assessment', { status: 400 });
+		console.error(`Policy API error — failing open: ${message}`);
+		// Any error from the policy API means we have no explicit block decision — fail open.
+		const headers = await setSecureCookie(request, env);
+		return new Response('Captcha validated successfully', { status: 200, headers });
 	}
 }
 
@@ -112,16 +103,10 @@ async function validateWithDecrypt(request: Request, env: Env): Promise<Response
 		const headers = await setSecureCookie(request, env);
 		return new Response('Captcha validated successfully', { status: 200, headers: headers });
 	} catch (error: unknown) {
-		if (error instanceof MonocleDecryptionError) {
-			console.error(`Error verifying assessment with private key: ${error.message}`);
-		} else if (error instanceof MonocleAPIError) {
-			console.error(
-				`Error verifying assessment with https://decrypt.mcl.spur.us/api/v1/assessment: ${error.message}`
-			);
-		} else if (error instanceof Error) {
-			console.error(`Error verifying assessment: ${error.message}`);
-		}
-		return new Response('Error verifying assessment', { status: 400 });
+		const message = error instanceof Error ? error.message : String(error);
+		console.error(`Error verifying assessment — failing open: ${message}`);
+		const headers = await setSecureCookie(request, env);
+		return new Response('Captcha validated successfully', { status: 200, headers });
 	}
 }
 
