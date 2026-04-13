@@ -133,7 +133,7 @@ function buildBlockResponse(env: Env): Response {
 		});
 	}
 
-	const statusCode = parseInt(env.BLOCK_STATUS_CODE ?? '403', 10);
+	const statusCode = parseInt(env.BLOCK_STATUS_CODE ?? '403', 10) || 403;
 	const title = env.BLOCK_PAGE_TITLE ?? 'Access Denied';
 	const body = env.BLOCK_RESPONSE_BODY ?? 'This request has been blocked';
 
