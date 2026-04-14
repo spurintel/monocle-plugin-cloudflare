@@ -7,56 +7,54 @@ import {
 	MonocleDecryptionError,
 } from '@spur.us/monocle-backend';
 
-/**
- * Cloudflare Worker that handles captcha validation and request routing
- */
 export default {
-	/**
-	 * Main request handler for the Cloudflare Worker.
-	 * @param {Request} request - The incoming request
-	 * @param {Env} env - Worker environment variables
-	 * @returns {Promise<Response>} Response object
-	 */
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
 
-		// This is the endpoint that the captcha will call to validate the captcha.
-		if (url.pathname === '/validate_captcha' && request.method === 'POST') {
-			return validateCaptchaHandler(request, env);
+		// The captcha page POSTs back to the same URL it was served from, with this
+		// sentinel header. This guarantees the worker always intercepts the validation
+		// request regardless of the configured route pattern.
+		if (request.method === 'POST' && request.headers.get('X-MCL-Validate') === '1') {
+			return env.USE_POLICY_API === 'true'
+				? validateWithPolicyApi(request, env)
+				: validateWithDecrypt(request, env);
 		}
 
 		const cookies = parseCookies(request.headers.get('Cookie'));
 
-		// If the cookie is set, return the original request
 		if (cookies[COOKIE_NAME] && (await validateCookie(request, env))) {
 			return fetch(request);
 		}
 
 		return new Response(
-			captcha.replace('PUBLISHABLE_KEY', env.PUBLISHABLE_KEY).replace('REPLACE_REDIRECT', url.href),
-			{
-				headers: {
-					'Content-Type': 'text/html',
-				},
-			}
+			captcha.replace('PUBLISHABLE_KEY', env.PUBLISHABLE_KEY).replaceAll('REPLACE_REDIRECT', JSON.stringify(url.href)),
+			{ headers: { 'Content-Type': 'text/html' } }
 		);
 	},
 } satisfies ExportedHandler<Env>;
 
-async function validateCaptchaHandler(request: Request, env: Env): Promise<Response> {
-	if (env.USE_POLICY_API === 'true') {
-		return validateWithPolicyApi(request, env);
+async function parseBody(request: Request): Promise<{ captchaData: string } | Response> {
+	let body: { captchaData: string };
+	try {
+		body = (await request.json()) as { captchaData: string };
+	} catch {
+		return new Response('Invalid request', { status: 400 });
 	}
-	return validateWithDecrypt(request, env);
+	if (!body.captchaData) {
+		return new Response('Invalid request', { status: 400 });
+	}
+	return body;
 }
 
 async function validateWithPolicyApi(request: Request, env: Env): Promise<Response> {
+	const body = await parseBody(request);
+	if (body instanceof Response) return body;
+
 	try {
 		const monocle = await createMonocleClient({
 			secretKey: env.SECRET_KEY,
 			baseDomain: 'mcl.spur.us',
 		});
-		const body = (await request.json()) as { captchaData: string };
 
 		const policyDecision = await monocle.evaluateAssessment(body.captchaData);
 
@@ -67,25 +65,30 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 		}
 
 		const headers = await setSecureCookie(request, env);
-		return new Response('Captcha validated successfully', { status: 200, headers: headers });
-	} catch (error: unknown) {
-		if (error instanceof MonocleAPIError) {
-			console.error(`Policy API error — failing open: ${error.message}`);
-		} else if (error instanceof Error) {
-			console.error(`Unexpected error evaluating assessment — failing open: ${error.message}`);
-		}
-		const headers = await setSecureCookie(request, env);
 		return new Response('Captcha validated successfully', { status: 200, headers });
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		if (error instanceof MonocleAPIError) {
+			const status = parseInt(/status (\d+)/.exec(message)?.[1] ?? '', 10);
+			if (status === 404) {
+				// No policy configured — fail open and allow through.
+				const headers = await setSecureCookie(request, env);
+				return new Response('Captcha validated successfully', { status: 200, headers });
+			}
+		}
+		console.error(`Policy API error — failing open: ${message}`);
+		return new Response('Captcha validated successfully', { status: 200 });
 	}
 }
 
 async function validateWithDecrypt(request: Request, env: Env): Promise<Response> {
 	const privateKeyPem = env.PRIVATE_KEY?.length ? env.PRIVATE_KEY : undefined;
 
+	const body = await parseBody(request);
+	if (body instanceof Response) return body;
+
 	try {
 		const monocle = await createMonocleClient({ secretKey: env.SECRET_KEY });
-		const body = (await request.json()) as { captchaData: string };
-
 		const assessment = await monocle.decryptAssessment(body.captchaData, { privateKeyPem });
 
 		const responseTime = new Date(assessment.ts);
@@ -104,17 +107,15 @@ async function validateWithDecrypt(request: Request, env: Env): Promise<Response
 		}
 
 		const headers = await setSecureCookie(request, env);
-		return new Response('Captcha validated successfully', { status: 200, headers: headers });
+		return new Response('Captcha validated successfully', { status: 200, headers });
 	} catch (error: unknown) {
 		if (error instanceof MonocleDecryptionError) {
-			console.error(`Error verifying assessment with private key — failing open: ${error.message}`);
-		} else if (error instanceof MonocleAPIError) {
-			console.error(`Error verifying assessment with decrypt API — failing open: ${error.message}`);
-		} else if (error instanceof Error) {
-			console.error(`Unexpected error verifying assessment — failing open: ${error.message}`);
+			console.error(`Assessment decryption failed: ${error.message}`);
+			return new Response('Blocked', { status: 403 });
 		}
-		const headers = await setSecureCookie(request, env);
-		return new Response('Captcha validated successfully', { status: 200, headers });
+		const message = error instanceof Error ? error.message : String(error);
+		console.error(`Decrypt API error — failing open: ${message}`);
+		return new Response('Captcha validated successfully', { status: 200 });
 	}
 }
 

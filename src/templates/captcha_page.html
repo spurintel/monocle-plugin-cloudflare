@@ -160,65 +160,60 @@
     <script src="https://mcl.spur.us/d/mcl.js?tk=PUBLISHABLE_KEY">
     </script>
     <script>
-        // Function to handle the captcha data submission
-       // Function to handle the captcha data submission
-// Function to handle captcha data submission
-function submitCaptchaData(data) {
-  fetch('/validate_captcha', {
-    method: 'POST',
-    redirect: 'manual',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ captchaData: data }),
-  })
-    .then(response => {
-      if (response.ok) {
-        window.location.href = 'REPLACE_REDIRECT'; // On success, redirect as before.
-        return;
-      }
+        function submitCaptchaData(data) {
+            fetch(REPLACE_REDIRECT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-MCL-Validate': '1',
+                },
+                body: JSON.stringify({ captchaData: data }),
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = REPLACE_REDIRECT;
+                        return;
+                    }
 
-      // Check for a configured block action from the worker.
-      const blockAction = response.headers.get('X-Block-Action');
+                    // Check for a configured block action from the worker.
+                    const blockAction = response.headers.get('X-Block-Action');
 
-      if (blockAction && blockAction.startsWith('redirect:')) {
-        // Redirect type — navigate to the configured URL.
-        window.location.href = blockAction.slice('redirect:'.length);
-        return;
-      }
+                    if (blockAction && blockAction.startsWith('redirect:')) {
+                        window.location.href = blockAction.slice('redirect:'.length);
+                        return;
+                    }
 
-      if (blockAction === 'html') {
-        // HTML block page — replace the entire document with the configured page.
-        response.text().then((html) => {
-          document.open();
-          document.write(html);
-          document.close();
-        });
-        return;
-      }
+                    if (blockAction === 'html') {
+                        response.text().then((html) => {
+                            document.open();
+                            document.write(html);
+                            document.close();
+                        });
+                        return;
+                    }
 
-      // Deliberate block (403) — show denial message using response body.
-      if (response.status === 403) {
-        connectionStatus.className = 'loading-no-animation';
-        document.title = "Monocle CAPTCHA Denied";
-        response.text().then((message) => {
-          const basicText = message && message.trim() !== "" ? message : "any VPNs or proxies and try again";
-          document.getElementById('connectionStatus').textContent = `Captcha validation failed. ${basicText}.`;
-          updateTheme();
-        });
-        return;
-      }
+                    // Deliberate block (403) — show denial message using response body.
+                    if (response.status === 403) {
+                        connectionStatus.className = 'loading-no-animation';
+                        document.title = 'Monocle CAPTCHA Denied';
+                        response.text().then((message) => {
+                            const basicText = message && message.trim() !== '' ? message : 'any VPNs or proxies and try again';
+                            document.getElementById('connectionStatus').textContent = `Captcha validation failed. ${basicText}.`;
+                            updateTheme();
+                        });
+                        return;
+                    }
 
-      // Any other error — fail open and allow traffic through.
-      window.location.href = 'REPLACE_REDIRECT';
-    })
-    .catch(error => {
-      console.error('Error during captcha validation:', error);
-      alert('An error occurred. Please try again.');
-    });
-}
-
-
-        // Initialize or reset the submission flag when appropriate
-        // window.bundleSubmitted = false;
+                    // Any other error — fail open and allow traffic through.
+                    window.location.href = REPLACE_REDIRECT;
+                })
+                .catch(error => {
+                    console.error('Error during captcha validation:', error);
+                    connectionStatus.className = 'loading-no-animation';
+                    document.getElementById('connectionStatus').textContent = 'An error occurred. Please refresh and try again.';
+                    updateTheme();
+                });
+        }
 
         if (window.MCL) {
             MCL.configure({
