@@ -11,6 +11,20 @@ export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
 
+		// If the request is for the configured redirect block page itself, pass it
+		// straight through to the origin so the page can be served without triggering
+		// the captcha. This makes same-domain block pages work with wildcard routes.
+		if (env.BLOCK_RESPONSE_TYPE === 'redirect' && env.BLOCK_REDIRECT_URL) {
+			try {
+				const blockUrl = new URL(env.BLOCK_REDIRECT_URL);
+				if (blockUrl.hostname === url.hostname && blockUrl.pathname === url.pathname) {
+					return fetch(request);
+				}
+			} catch {
+				// Invalid BLOCK_REDIRECT_URL — ignore and continue normal processing.
+			}
+		}
+
 		// The captcha page POSTs back to the same URL it was served from, with this
 		// sentinel header. This guarantees the worker always intercepts the validation
 		// request regardless of the configured route pattern.
