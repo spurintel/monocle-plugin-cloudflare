@@ -55,6 +55,21 @@ export default {
 	},
 } satisfies ExportedHandler<Env>;
 
+/**
+ * Emits the raw assessment for a verify request as a single flat JSON line via
+ * console.log, for customers to consume with Workers Logs / Logpush. Default
+ * OFF: only active when LOG_ASSESSMENT is exactly "true". Wrapped in try/catch
+ * so logging can never break the deliberately fail-open verify handlers.
+ */
+export function logAssessment(env: Env, payload: Record<string, unknown>): void {
+	if (env.LOG_ASSESSMENT !== 'true') return;
+	try {
+		console.log(JSON.stringify({ monocle: 'assessment', ...payload }));
+	} catch {
+		// Logging is best-effort only; never let it interfere with verification.
+	}
+}
+
 async function parseBody(request: Request): Promise<{ captchaData: string } | Response> {
 	let body: { captchaData: string };
 	try {
@@ -79,6 +94,14 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 		});
 
 		const policyDecision = await monocle.evaluateAssessment(body.captchaData);
+
+		// Log before branching so allow AND deny outcomes are both captured.
+		logAssessment(env, {
+			allowed: policyDecision.allowed,
+			decisionId: policyDecision.decisionId,
+			reason: policyDecision.reason,
+			assessment: policyDecision.assessment,
+		});
 
 		if (!policyDecision.allowed) {
 			return env.BLOCK_RESPONSE_TYPE
@@ -118,6 +141,9 @@ async function validateWithDecrypt(request: Request, env: Env): Promise<Response
 	try {
 		const monocle = await createMonocleClient({ secretKey: env.SECRET_KEY });
 		const assessment = await monocle.decryptAssessment(body.captchaData, { privateKeyPem });
+
+		// Log before branching so allow AND deny outcomes are both captured.
+		logAssessment(env, { assessment });
 
 		const responseTime = new Date(assessment.ts);
 		const currentTime = new Date();

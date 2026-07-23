@@ -14,6 +14,7 @@ declare namespace Cloudflare {
 		BLOCK_PAGE_TITLE?: string;
 		BLOCK_RESPONSE_BODY?: string;
 		BLOCK_REDIRECT_URL?: string;
+		LOG_ASSESSMENT?: string;
 	}
 }
 interface Env extends Cloudflare.Env {}
