@@ -13,28 +13,30 @@ describe('Cloudflare Worker', () => {
 		expect(text).toContain('test_publishable_key');
 	});
 
-	it('should handle captcha validation endpoint', async () => {
+	it('should reject validation requests without captcha data', async () => {
 		const request = new Request('https://example.com/validate_captcha', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ captchaData: 'test_captcha_data' }),
+			headers: { 'Content-Type': 'application/json', 'X-MCL-Validate': '1' },
+			body: JSON.stringify({}),
 		});
 
 		const response = await SELF.fetch(request);
-		expect(response.status).toBe(400); // Should fail with invalid captcha data
+		expect(response.status).toBe(400);
 	});
 
 	it('should handle decryptAssessment errors', async () => {
 		const request = new Request('https://example.com/validate_captcha', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
+			headers: { 'Content-Type': 'application/json', 'X-MCL-Validate': '1' },
 			body: JSON.stringify({ captchaData: 'invalid_captcha_data' }),
 		});
 
+		// Undecryptable assessments are the one verification failure that blocks
+		// rather than failing open: the data is bad, not the API.
 		const response = await SELF.fetch(request);
-		expect(response.status).toBe(400);
+		expect(response.status).toBe(403);
 		const text = await response.text();
-		expect(text).toContain('Error verifying assessment');
+		expect(text).toContain('Blocked');
 	});
 
 	it('should allow requests with valid cookie', async () => {

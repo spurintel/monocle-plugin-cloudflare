@@ -21,7 +21,7 @@ export default {
 					return fetch(request);
 				}
 			} catch {
-				// Invalid BLOCK_REDIRECT_URL — ignore and continue normal processing.
+				// Invalid BLOCK_REDIRECT_URL, ignore and continue normal processing.
 			}
 		}
 
@@ -42,7 +42,15 @@ export default {
 
 		return new Response(
 			captcha.replace('PUBLISHABLE_KEY', env.PUBLISHABLE_KEY).replaceAll('REPLACE_REDIRECT', JSON.stringify(url.href)),
-			{ headers: { 'Content-Type': 'text/html' } }
+			{
+				headers: {
+					'Content-Type': 'text/html',
+					// The challenge is per-request and security-sensitive: never let a
+					// browser or intermediary cache and re-serve a stale interstitial.
+					'Cache-Control': 'no-store, no-cache, must-revalidate',
+					Pragma: 'no-cache',
+				},
+			}
 		);
 	},
 } satisfies ExportedHandler<Env>;
@@ -82,16 +90,22 @@ async function validateWithPolicyApi(request: Request, env: Env): Promise<Respon
 		return new Response('Captcha validated successfully', { status: 200, headers });
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		if (error instanceof MonocleAPIError) {
-			const status = parseInt(/status (\d+)/.exec(message)?.[1] ?? '', 10);
-			if (status === 404) {
-				// No policy configured — fail open and allow through.
-				const headers = await setSecureCookie(request, env);
-				return new Response('Captcha validated successfully', { status: 200, headers });
-			}
+		const is404 =
+			error instanceof MonocleAPIError &&
+			parseInt(/status (\d+)/.exec(message)?.[1] ?? '', 10) === 404;
+		// 404 = no policy configured (a normal "allow"); anything else = the API is
+		// degraded. Both fail open, and CRITICALLY set the cookie: a 200 without it
+		// sends the visitor back still cookieless, re-challenged and re-failing, an
+		// infinite challenge loop for as long as the API is down. A single guarded
+		// path so cookie-minting failure can't escape as a 500 (only the log differs).
+		if (!is404) console.error(`Policy API error, failing open: ${message}`);
+		try {
+			const headers = await setSecureCookie(request, env);
+			return new Response('Captcha validated successfully', { status: 200, headers });
+		} catch (cookieError: unknown) {
+			console.error(`Could not set fail-open cookie: ${String(cookieError)}`);
+			return new Response('Captcha validated successfully', { status: 200 });
 		}
-		console.error(`Policy API error — failing open: ${message}`);
-		return new Response('Captcha validated successfully', { status: 200 });
 	}
 }
 
@@ -128,9 +142,34 @@ async function validateWithDecrypt(request: Request, env: Env): Promise<Response
 			return new Response('Blocked', { status: 403 });
 		}
 		const message = error instanceof Error ? error.message : String(error);
-		console.error(`Decrypt API error — failing open: ${message}`);
-		return new Response('Captcha validated successfully', { status: 200 });
+		console.error(`Decrypt API error, failing open: ${message}`);
+		// Fail open WITH the cookie (see validateWithPolicyApi): without it the
+		// visitor loops on the challenge for as long as the API is degraded.
+		try {
+			const headers = await setSecureCookie(request, env);
+			return new Response('Captcha validated successfully', { status: 200, headers });
+		} catch (cookieError: unknown) {
+			console.error(`Could not set fail-open cookie: ${String(cookieError)}`);
+			return new Response('Captcha validated successfully', { status: 200 });
+		}
 	}
+}
+
+/**
+ * Encodes the five HTML-significant characters so customer-supplied block-page
+ * text (title/body) is rendered as literal text, never parsed as markup. This is
+ * the injection defence for the block page: the values arrive as arbitrary
+ * strings and are interpolated into the HTML below, so they MUST be escaped here
+ * at the sink. `&` is replaced first so the entities we introduce aren't
+ * re-encoded.
+ */
+function escapeHtml(value: string): string {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
 }
 
 /**
@@ -149,8 +188,8 @@ function buildBlockResponse(env: Env): Response {
 	}
 
 	const statusCode = parseInt(env.BLOCK_STATUS_CODE ?? '403', 10) || 403;
-	const title = env.BLOCK_PAGE_TITLE ?? 'Access Denied';
-	const body = env.BLOCK_RESPONSE_BODY ?? 'This request has been blocked';
+	const title = escapeHtml(env.BLOCK_PAGE_TITLE ?? 'Access Denied');
+	const body = escapeHtml(env.BLOCK_RESPONSE_BODY ?? 'This request has been blocked');
 
 	const html = `<!DOCTYPE html>
 <html>

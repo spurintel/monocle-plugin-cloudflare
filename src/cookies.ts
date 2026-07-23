@@ -26,11 +26,13 @@ export async function setSecureCookie(request: Request, env: Env) {
 	const clientIpAddress =
 		request.headers.get('CF-Connecting-IP') || request.headers.get('X-Real-IP');
 	if (!clientIpAddress) {
-		console.log('ERROR: No client IP found in headers.');
-		console.log(JSON.stringify([...request.headers]));
+		// Issue the cookie WITHOUT an IP binding rather than baking in a literal
+		// unmatchable value: a cookie that can never validate would trap the
+		// visitor in an endless challenge loop.
+		console.error('No client IP found in headers; issuing an IP-unbound cookie.');
 	}
 	const expiryTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-	const cookieValue = `${clientIpAddress}|${expiryTime}`;
+	const cookieValue = `${clientIpAddress ?? ''}|${expiryTime}`;
 
 	const secretKey = await crypto.subtle.importKey(
 		'raw',
@@ -67,10 +69,6 @@ export async function setSecureCookie(request: Request, env: Env) {
  */
 export async function validateCookie(request: Request, env: Env): Promise<boolean> {
 	const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Real-IP');
-	if (!clientIp) {
-		console.log('ERROR: No client IP found in headers.');
-		console.log(JSON.stringify([...request.headers]));
-	}
 	const cookieHeader = request.headers.get('Cookie');
 	if (!cookieHeader) {
 		return false;
@@ -82,21 +80,25 @@ export async function validateCookie(request: Request, env: Env): Promise<boolea
 		return false;
 	}
 
-	const cookieValue = mclValidCookie.split('=')[1];
+	// slice, not split('='): the value itself may contain '='.
+	const cookieValue = mclValidCookie.slice('MCLVALID='.length);
 	const [ivHex, encryptedValueHex] = cookieValue.split('.');
 	if (!ivHex || !encryptedValueHex) {
 		return false;
 	}
 
-	const secretKey = await crypto.subtle.importKey(
-		'raw',
-		hexToBuf(env.COOKIE_SECRET_VALUE),
-		{ name: 'AES-GCM', length: 256 },
-		false,
-		['encrypt', 'decrypt']
-	);
-	var clientIpAddress, expiryTime;
+	// Key import and decrypt both run inside the try: a bad/empty cookie secret or
+	// malformed ciphertext must fail the cookie (re-challenge), never throw out of
+	// here and surface as a 500.
+	let clientIpAddress, expiryTime;
 	try {
+		const secretKey = await crypto.subtle.importKey(
+			'raw',
+			hexToBuf(env.COOKIE_SECRET_VALUE),
+			{ name: 'AES-GCM', length: 256 },
+			false,
+			['encrypt', 'decrypt']
+		);
 		const decryptedValue = await crypto.subtle.decrypt(
 			{ name: 'AES-GCM', iv: hexToBuf(ivHex) },
 			secretKey,
@@ -108,12 +110,15 @@ export async function validateCookie(request: Request, env: Env): Promise<boolea
 		console.log(`Error with decrypt: ${error}`);
 		return false;
 	}
-	if (clientIp !== clientIpAddress) {
+	// An empty stored IP means the cookie was issued without an IP binding (no
+	// client IP was available at issue time); skip the comparison rather than
+	// failing a cookie that could never match anything.
+	if (clientIpAddress !== '' && clientIp !== clientIpAddress) {
 		console.log(`Mismatch IP address. Expecting ${clientIpAddress}, Got ${clientIp}`);
 		return false;
 	}
 
-	if (Math.floor(Date.now() / 1000) >= parseInt(expiryTime, 10)) {
+	if (Math.floor(Date.now() / 1000) >= parseInt(expiryTime ?? '0', 10)) {
 		console.log(`Cookie has expired.`);
 		return false;
 	}
