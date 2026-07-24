@@ -1,5 +1,5 @@
 {
-	"name": "template-worker-router",
+	"name": "monocle-plugin-cloudflare",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
@@ -7,7 +7,7 @@
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
-		"test": "vitest"
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@spur.us/monocle-backend": "^0.5.1"
