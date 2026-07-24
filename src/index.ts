@@ -40,8 +40,13 @@ export default {
 			return fetch(request);
 		}
 
+		// Function replacements are required: with a string replacement, `$`-patterns
+		// ($&, $`, $', $$) in the key or the visitor's URL would be expanded as
+		// substitution directives and corrupt the challenge page.
 		return new Response(
-			captcha.replace('PUBLISHABLE_KEY', env.PUBLISHABLE_KEY).replaceAll('REPLACE_REDIRECT', JSON.stringify(url.href)),
+			captcha
+				.replace('PUBLISHABLE_KEY', () => env.PUBLISHABLE_KEY)
+				.replaceAll('REPLACE_REDIRECT', () => JSON.stringify(url.href)),
 			{
 				headers: {
 					'Content-Type': 'text/html',
@@ -173,13 +178,26 @@ function escapeHtml(value: string): string {
 }
 
 /**
+ * Parses BLOCK_STATUS_CODE, accepting only integers in 400-599 (matching the
+ * Fastly plugin's parseBlockStatus) and falling back to 403 otherwise. The
+ * range guard matters: `new Response` throws a RangeError for statuses outside
+ * 200-599 (and for 204/205 with a body), and because buildBlockResponse runs
+ * inside the fail-open try, a config typo like "999" would silently turn every
+ * policy DENY into an ALLOW plus a validation cookie.
+ */
+export function parseBlockStatus(value: string | undefined): number {
+	const status = parseInt(value ?? '403', 10);
+	return Number.isInteger(status) && status >= 400 && status <= 599 ? status : 403;
+}
+
+/**
  * Builds the block response based on worker env config.
  * Sets X-Block-Action header so the captcha page JS can handle it correctly:
  *   - "redirect:<url>" → captcha JS navigates window.location
  *   - "html"          → captcha JS replaces the document with the HTML body
  * Falls back to a plain 403 if BLOCK_RESPONSE_TYPE is not set.
  */
-function buildBlockResponse(env: Env): Response {
+export function buildBlockResponse(env: Env): Response {
 	if (env.BLOCK_RESPONSE_TYPE === 'redirect' && env.BLOCK_REDIRECT_URL) {
 		return new Response(null, {
 			status: 403,
@@ -187,7 +205,7 @@ function buildBlockResponse(env: Env): Response {
 		});
 	}
 
-	const statusCode = parseInt(env.BLOCK_STATUS_CODE ?? '403', 10) || 403;
+	const statusCode = parseBlockStatus(env.BLOCK_STATUS_CODE);
 	const title = escapeHtml(env.BLOCK_PAGE_TITLE ?? 'Access Denied');
 	const body = escapeHtml(env.BLOCK_RESPONSE_BODY ?? 'This request has been blocked');
 
