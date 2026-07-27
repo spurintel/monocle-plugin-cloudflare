@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SELF, env } from 'cloudflare:test';
 import { setSecureCookie } from '../src/cookies';
+import { buildBlockResponse } from '../src/index';
 
 describe('Cloudflare Worker', () => {
 	it('should return captcha page for requests without valid cookie', async () => {
@@ -37,6 +38,32 @@ describe('Cloudflare Worker', () => {
 		expect(response.status).toBe(403);
 		const text = await response.text();
 		expect(text).toContain('Blocked');
+	});
+
+	it('should render the redirect URL verbatim when it contains $-patterns', async () => {
+		// $& and $` are substitution directives for String.replaceAll with a string
+		// replacement; the function replacement must insert the URL literally.
+		const href = new URL('https://example.com/?next=$&q=$`').href;
+		const response = await SELF.fetch(new Request(href));
+
+		expect(response.status).toBe(200);
+		const text = await response.text();
+		expect(text).toContain(JSON.stringify(href));
+		expect(text).not.toContain('REPLACE_REDIRECT');
+	});
+
+	it('should fall back to 403 when BLOCK_STATUS_CODE cannot be used as a block status', () => {
+		// Out-of-range statuses (and 204, which forbids a body) would make
+		// `new Response` throw inside the fail-open try, turning a DENY into an ALLOW.
+		for (const code of ['999', '99', '204']) {
+			const response = buildBlockResponse({ ...env, BLOCK_STATUS_CODE: code });
+			expect(response.status).toBe(403);
+		}
+	});
+
+	it('should use BLOCK_STATUS_CODE when it is a valid error status', () => {
+		const response = buildBlockResponse({ ...env, BLOCK_STATUS_CODE: '451' });
+		expect(response.status).toBe(451);
 	});
 
 	it('should allow requests with valid cookie', async () => {
