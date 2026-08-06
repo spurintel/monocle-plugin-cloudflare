@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { SELF, env } from 'cloudflare:test';
 import { setSecureCookie } from '../src/cookies';
-import { buildBlockResponse } from '../src/index';
+import { buildBlockResponse, proxyToOrigin } from '../src/index';
 
 describe('Cloudflare Worker', () => {
 	it('should return captcha page for requests without valid cookie', async () => {
@@ -87,5 +87,59 @@ describe('Cloudflare Worker', () => {
 		expect(response.status).toBe(200);
 		const text = await response.text();
 		expect(text).toContain('Example Domain');
+	});
+});
+
+describe('proxyToOrigin client IP header', () => {
+	const captureOriginFetch = () => {
+		const captured: Request[] = [];
+		vi.stubGlobal('fetch', async (input: Request) => {
+			captured.push(input);
+			return new Response('ok');
+		});
+		return captured;
+	};
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('overwrites the configured header with the connecting IP', async () => {
+		const captured = captureOriginFetch();
+		const request = new Request('https://example.com', {
+			headers: {
+				'CF-Connecting-IP': '203.0.113.7',
+				// A forged inbound value must never survive to the origin.
+				'X-Spur-Client-IP': '198.51.100.99',
+			},
+		});
+
+		await proxyToOrigin(request, { ...env, CLIENT_IP_HEADER: 'X-Spur-Client-IP' });
+
+		expect(captured).toHaveLength(1);
+		expect(captured[0].headers.get('X-Spur-Client-IP')).toBe('203.0.113.7');
+	});
+
+	it('deletes a forged inbound header when no client IP is available', async () => {
+		const captured = captureOriginFetch();
+		const request = new Request('https://example.com', {
+			headers: { 'X-Spur-Client-IP': '198.51.100.99' },
+		});
+
+		await proxyToOrigin(request, { ...env, CLIENT_IP_HEADER: 'X-Spur-Client-IP' });
+
+		expect(captured[0].headers.get('X-Spur-Client-IP')).toBeNull();
+	});
+
+	it('leaves the request untouched when the binding is absent', async () => {
+		const captured = captureOriginFetch();
+		const request = new Request('https://example.com', {
+			headers: { 'CF-Connecting-IP': '203.0.113.7' },
+		});
+
+		await proxyToOrigin(request, { ...env, CLIENT_IP_HEADER: undefined });
+
+		expect(captured[0]).toBe(request);
+		expect(captured[0].headers.get('X-Spur-Client-IP')).toBeNull();
 	});
 });
