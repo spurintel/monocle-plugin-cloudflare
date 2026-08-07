@@ -131,6 +131,19 @@ describe('proxyToOrigin client IP header', () => {
 		expect(captured[0].headers.get('X-Spur-Client-IP')).toBeNull();
 	});
 
+	it('never sources the IP from the client-settable X-Real-IP header', async () => {
+		const captured = captureOriginFetch();
+		// No CF-Connecting-IP (Cloudflare always sets it on real traffic); a forged
+		// X-Real-IP must not be promoted into the trusted header.
+		const request = new Request('https://example.com', {
+			headers: { 'X-Real-IP': '198.51.100.99', 'X-Spur-Client-IP': '198.51.100.99' },
+		});
+
+		await proxyToOrigin(request, { ...env, CLIENT_IP_HEADER: 'X-Spur-Client-IP' });
+
+		expect(captured[0].headers.get('X-Spur-Client-IP')).toBeNull();
+	});
+
 	it('leaves the request untouched when the binding is absent', async () => {
 		const captured = captureOriginFetch();
 		const request = new Request('https://example.com', {

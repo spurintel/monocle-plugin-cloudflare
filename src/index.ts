@@ -67,6 +67,11 @@ export default {
  * an edge trust boundary: it is ALWAYS overwritten from Cloudflare's own view
  * of the connection, and deleted when no client IP is available, so an inbound
  * client-supplied value can never reach the origin as a spoofed identity.
+ *
+ * The IP is taken ONLY from CF-Connecting-IP, which Cloudflare sets and a
+ * client cannot forge. X-Real-IP is deliberately NOT a fallback here: it is a
+ * client-settable header, so trusting it would reopen the spoofing hole this
+ * header exists to close (the origin trusts whatever we send).
  */
 export function proxyToOrigin(request: Request, env: Env): Promise<Response> {
 	if (!env.CLIENT_IP_HEADER) {
@@ -74,7 +79,7 @@ export function proxyToOrigin(request: Request, env: Env): Promise<Response> {
 	}
 
 	const originRequest = new Request(request);
-	const clientIp = request.headers.get('CF-Connecting-IP') ?? request.headers.get('X-Real-IP');
+	const clientIp = request.headers.get('CF-Connecting-IP');
 	if (clientIp) {
 		originRequest.headers.set(env.CLIENT_IP_HEADER, clientIp);
 	} else {
