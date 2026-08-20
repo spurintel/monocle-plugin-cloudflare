@@ -1,0 +1,57 @@
+# One-off worker config for exercising the DEV decrypt service
+# (https://decrypt.mcl.spur.dev) and the Stigg entitlement sidecar that runs
+# alongside it. Dev is the only environment with that sidecar: it is gated
+# behind !isProd in deployments/pulumi/main.go.
+#
+#   wrangler dev    --config wrangler.dev-decrypt.toml     # local, localhost:8787
+#   wrangler deploy --config wrangler.dev-decrypt.toml     # only after setting routes
+#
+# Deliberately not the default config: BASE_DOMAIN is what points the worker at
+# a non-production Monocle, and nothing here should be able to reach prod.
+
+name = "monocle-dev-decrypt-test"
+main = "src/index.ts"
+compatibility_date = "2024-11-11"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# No routes: `wrangler dev` serves on localhost. Add them only if you deploy
+# this to a zone you own, and never to a customer's.
+
+[vars]
+# The whole point of this config. The SDK builds `https://decrypt.<domain>`,
+# so this sends policy evaluation to decrypt.mcl.spur.dev.
+BASE_DOMAIN = "mcl.spur.dev"
+
+# Take the policy-API path rather than local decryption: that is the path that
+# reaches the sidecar, since the entitlement check runs inside the policy
+# handler on the decrypt service.
+USE_POLICY_API = "true"
+
+# Serve a visible block page rather than a bare 403, so an enforced Block is
+# obvious in the browser and distinguishable from an allow.
+BLOCK_RESPONSE_TYPE = "html"
+BLOCK_STATUS_CODE = "403"
+BLOCK_PAGE_TITLE = "Blocked (dev decrypt test)"
+BLOCK_RESPONSE_BODY = "Policy blocked this request. If you expected the entitlement downgrade instead, the org is entitled, or the check did not run."
+
+# PUBLISHABLE_KEY must belong to the same Monocle deployment as SECRET_KEY:
+# mcl.js mints the assessment against that keypair, and dev decrypt decrypts it
+# with the private key on the deployment doc. A mismatch fails at decryption,
+# before any policy or entitlement logic runs.
+PUBLISHABLE_KEY = "REPLACE_ME"
+
+# Secrets (do NOT put these in vars; use `wrangler secret put --config this-file`
+# for a deploy, or a .dev.vars file for `wrangler dev`):
+#
+#   SECRET_KEY          the deployment's decryptToken, from the spur-monocle-dev
+#                       Firestore `deployments` collection
+#   COOKIE_SECRET_VALUE any 32-byte hex string; only signs the session cookie
+#
+# .dev.vars (gitignored) for local runs:
+#   SECRET_KEY="..."
+#   COOKIE_SECRET_VALUE="..."
+
+[observability]
+enabled = true
+head_sampling_rate = 1

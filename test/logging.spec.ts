@@ -120,6 +120,25 @@ describe('assessment logging', () => {
 		});
 	});
 
+	it('should log nothing when the policy API withholds the assessment', async () => {
+		// An org without the logging entitlement gets a decision with no
+		// assessment, so there is nothing worth writing a line about.
+		mockClient.evaluateAssessment.mockResolvedValue({
+			allowed: true,
+			decisionId: 'test-decision-id',
+			reason: 'test-reason',
+		});
+
+		const response = await worker.fetch(buildValidateRequest() as never, {
+			...env,
+			USE_POLICY_API: 'true',
+			LOG_ASSESSMENT: 'true',
+		});
+
+		expect(response.status).toBe(200); // the verdict still stands
+		expect(assessmentLogLines(logSpy)).toHaveLength(0);
+	});
+
 	it('should never throw, even for an unserializable payload', () => {
 		const circular: Record<string, unknown> = {};
 		circular.self = circular;

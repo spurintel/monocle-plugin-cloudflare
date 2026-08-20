@@ -68,6 +68,9 @@ export default {
  */
 export function logAssessment(env: Env, payload: Record<string, unknown>): void {
 	if (env.LOG_ASSESSMENT !== 'true') return;
+	// The policy API omits the assessment when the plan lacks the logging
+	// entitlement, and a log line with no assessment in it is just noise.
+	if (payload.assessment == null) return;
 	try {
 		console.log(JSON.stringify({ monocle: 'assessment', ...payload }));
 	} catch {
