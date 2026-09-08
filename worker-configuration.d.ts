@@ -9,6 +9,7 @@ declare namespace Cloudflare {
 		SECRET_KEY: string;
 		EXEMPTED_SERVICES?: string;
 		USE_POLICY_API?: string;
+		CLIENT_IP_HEADER?: string;
 		BLOCK_RESPONSE_TYPE?: string;
 		BLOCK_STATUS_CODE?: string;
 		BLOCK_PAGE_TITLE?: string;
